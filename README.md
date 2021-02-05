@@ -1,4 +1,4 @@
-# PyWorkflow - A Python Binding of Workflow
+# PyWorkflow - A Python Binding of C++ Workflow
 
 ## Build
 
