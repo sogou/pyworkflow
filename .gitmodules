@@ -1,0 +1,6 @@
+[submodule "workflow"]
+	path = workflow
+	url = https://github.com/sogou/workflow.git
+[submodule "pybind11"]
+	path = pybind11
+	url = https://github.com/pybind/pybind11.git
