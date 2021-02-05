@@ -28,7 +28,7 @@ def main():
         print("USAGE: {} <http URL>".format(sys.argv[0]))
         sys.exit(1)
     url = sys.argv[1]
-    if(url[:7] != "http://" and url[:8] != "https://"):
+    if(url[:7].lower() != "http://" and url[:8].lower() != "https://"):
         url = "http://" + url
     task = wf.create_http_task(url, redirect_max=4, retry_max=2, callback=wget_callback)
     req = task.get_req()

@@ -33,7 +33,7 @@ def http_callback(t):
 def main():
     parallel_work = wf.create_parallel_work(parallel_callback)
     for url in sys.argv[1:]:
-        if(url[:7] != "http://" and url[:8] != "https://"):
+        if(url[:7].lower() != "http://" and url[:8].lower() != "https://"):
             url = "http://" + url
         task = wf.create_http_task(url, redirect_max=4, retry_max=2, callback=http_callback)
         req = task.get_req()
