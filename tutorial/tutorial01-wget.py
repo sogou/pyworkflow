@@ -36,7 +36,7 @@ def main():
     req.add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)")
     req.add_header_pair("Connection", "close")
     task.start()
-    wf.wait()
+    wf.wait_finish()
 
 # Usage: python3 tutorial01-wget.py http://www.sogou.com/
 if __name__ == "__main__":

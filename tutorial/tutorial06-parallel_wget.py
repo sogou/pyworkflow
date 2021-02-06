@@ -46,7 +46,7 @@ def main():
         series.set_context(ctx)
         parallel_work.add_series(series)
     wf.start_series_work(parallel_work, None)
-    wf.wait()
+    wf.wait_finish()
 
 # Usage: python3 tutorial06-parallel_wget.py https://www.sogou.com/ https://zhihu.sogou.com/
 if __name__ == "__main__":

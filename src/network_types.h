@@ -342,6 +342,12 @@ public:
         }
         return server.start(family, host.c_str(), port, cert_file.c_str(), key_file.c_str());
     }
+    void shutdown() {
+        server.shutdown();
+    }
+    void wait_finish() {
+        server.wait_finish();
+    }
     void stop() {
         server.stop();
     }
