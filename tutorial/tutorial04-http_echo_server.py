@@ -41,6 +41,10 @@ def main():
         cv.wait()
         cv.release()
         server.stop()
+        ''' server.stop() equal to:
+        server.shutdown()
+        server.wait_finish()
+        '''
     else:
         print("Cannot start server")
         sys.exit(1)

@@ -115,11 +115,11 @@ public:
     static std::mutex series_mtx;
     static size_t series_counter;
     static std::condition_variable series_cv;
-    static void wait() {
+    static void wait_finish() {
         std::unique_lock<std::mutex> lk(series_mtx);
         series_cv.wait(lk, [&](){ return series_counter == 0; });
     }
-    static bool wait_for(double seconds) {
+    static bool wait_finish_timeout(double seconds) {
         auto dur = std::chrono::duration<double>(seconds);
         std::unique_lock<std::mutex> lk(series_mtx);
         return series_cv.wait_for(lk, dur, [&](){ return series_counter == 0; });

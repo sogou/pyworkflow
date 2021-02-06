@@ -190,8 +190,8 @@ void init_common_types(py::module_ &wf) {
         py::arg("all_series"), py::arg("callback")
     );
     wf.def("start_parallel_work", &start_parallel_work, py::arg("all_series"), py::arg("callback"));
-    wf.def("wait", &CountableSeriesWork::wait, py::call_guard<py::gil_scoped_release>());
-    wf.def("wait_for", &CountableSeriesWork::wait_for, py::call_guard<py::gil_scoped_release>());
+    wf.def("wait_finish", &CountableSeriesWork::wait_finish, py::call_guard<py::gil_scoped_release>());
+    wf.def("wait_finish_timeout", &CountableSeriesWork::wait_finish_timeout, py::call_guard<py::gil_scoped_release>());
     wf.def("get_error_string", &get_error_string, py::arg("state"), py::arg("error"));
     wf.def("inner_init", &inner_init);
 }
