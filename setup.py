@@ -112,7 +112,7 @@ setup(
     description="A C++ Workflow Wrapper for Python",
     long_description="A C++ Workflow Wrapper for Python",
     long_description_content_type="text/plain",
-    url="https://github.com/sogou/",
+    url="https://github.com/sogou/pyworkflow",
     ext_modules=[CMakeExtension("pywf.cpp_pyworkflow")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
