@@ -107,9 +107,9 @@ void init_network_types(py::module_ &wf) {
             py::arg("key_file") = std::string())
         .def("start", &PyWFHttpServer::start_2, py::arg("family"), py::arg("host"), py::arg("port"),
             py::arg("cert_file") = std::string(), py::arg("key_file") = std::string())
-        .def("shutdown", &PyWFHttpServer::shutdown)
-        .def("wait_finish", &PyWFHttpServer::wait_finish)
-        .def("stop",  &PyWFHttpServer::stop)
+        .def("shutdown", &PyWFHttpServer::shutdown, py::call_guard<py::gil_scoped_release>())
+        .def("wait_finish", &PyWFHttpServer::wait_finish, py::call_guard<py::gil_scoped_release>())
+        .def("stop",  &PyWFHttpServer::stop, py::call_guard<py::gil_scoped_release>())
     ;
     wf.def("create_http_task", &create_http_task, py::arg("url"), py::arg("redirect_max"),
         py::arg("retry_max"), py::arg("callback"));
