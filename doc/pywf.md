@@ -23,7 +23,7 @@ def create_http_task():
 # 创建一个Http任务，并放入串行当中
 series = wf.create_series_work(create_http_task(), series_callback)
 series.start() # 启动串行
-wf.wait() # 等待所有串行结束
+wf.wait_finish() # 等待所有串行结束
 ```
 
 ### 注意事项
