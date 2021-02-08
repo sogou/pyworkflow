@@ -1,36 +1,4 @@
 # pywf
-## 概览
-C++ Workflow是一个高性能的异步引擎，本项目着力于实现一个Python版的Workflow，让Python用户也能享受Workflow带来的绝佳体验。
-
-### 快速上手
-```py
-import pywf as wf # 以下直接简称 wf
-def series_callback(x):
-    pass
-
-def http_callback(x):
-    req = x.get_req()
-    resp = x.get_resp()
-    print("http task state:{} error:{} method:{} uri:{} status_code:{} phrase:{} body[:15]:{}".format(
-        x.get_state(), x.get_error(),
-        req.get_method(), req.get_request_uri(),
-        resp.get_status_code(), resp.get_reason_phrase(), resp.get_body()[:15]
-    ))
-
-def create_http_task():
-    return wf.create_http_task("http://www.sogou.com/", 1, 1, http_callback)
-
-# 创建一个Http任务，并放入串行当中
-series = wf.create_series_work(create_http_task(), series_callback)
-series.start() # 启动串行
-wf.wait_finish() # 等待所有串行结束
-```
-
-### 注意事项
-- 框架本身不抛出异常，也未处理任何异常，所以用户需要保证回调函数不会抛出异常，context的构造和析构不抛出异常
-- 所有通过工厂函数创建出的task，必须start、dismiss或添加至一个series中
-- 所有创建出的series必须start、dismiss或添加至一个parallel中
-- 所有创建出的parallel必须start、dismiss或添加至一个series中
 
 ## 基础类型
 在C++ Workflow中，所有由Workflow创建的`xxxTask`或`xxxMessage`等资源均由Workflow负责释放，用户只需要在资源生命周期结束之前通过指针或引用等方式访问公开接口。在Python Workflow中，为了实现这一特性，所有的原生指针被包装成一个含有该指针的Python对象，且均派生自`WFBase`类。Python用户同样需要注意，所有由被包装的指针指向的对象的生命周期均由Workflow管理，在对应的任务`callback`结束后就会立即被释放，虽然Python层面仍保留有一个指针，但此时已经成为野指针，用户切不可再次使用。可能有一些奇技淫巧可以在运行时报告这种错误，但我们暂时没有计划这样做。如果用户要判断哪种对象需要注意生命周期的问题，可以进行如下判断
@@ -114,12 +82,12 @@ isinstance(p, wf.SubTask) # parallel work是一种task
 - wf.series_of(wf.SubTask) -> wf.SeriesWork
   - 获取task所在的series
   - 未被加入到sereis的task会返回空指针，用series.is_null()来检查
-- wf.wait() -> None
+- wf.wait_finish() -> None
   - **重要**
   - workflow设计了一套严密的管理体系来保证所有的任务都会在正确的时机被释放，但在PyWF中，一些Python对象会被引用在Series或者Task中，需要保证在Python线程退出前，这些对象均已被成功释放
-  - 在PyWF中，用户只需在需要等待所有串行完成的地方调用`wf.wait()`，该函数返回时所有被启动的串行均已被执行，被放弃的串行均已被析构
-  - `wf.wait()`可以作为一种序列点，若用户创建了串行但既不启动也不放弃，则`wf.wait()`不会返回
-- wf.wait_for(float seconds) -> None
+  - 在PyWF中，用户只需在需要等待所有串行完成的地方调用`wf.wait_finish()`，该函数返回时所有被启动的串行均已被执行，被放弃的串行均已被析构
+  - `wf.wait_finish()`可以作为一种序列点，若用户创建了串行但既不启动也不放弃，则`wf.wait_finish()`不会返回
+- wf.wait_finish_timeout(float seconds) -> None
   - 等待串行完成，可以传入一个以秒计时的参数
   - 函数返回`True`时表示所有串行执行完成
 - wf.get_error_string(int state, int error) -> None
