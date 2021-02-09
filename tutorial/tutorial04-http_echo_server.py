@@ -44,13 +44,17 @@ def main():
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, stop)
 
-    code = server.start(port)
-    if code != 0:
-        print(f"Start server fail, code={code}")
+    # You can use server.start(socket.AddressFamily.AF_INET, "localhost", port) too
+    if server.start(port) == 0:
+        stop_event.wait()
+        server.stop()
+        """ server.stop() equal to:
+        server.shutdown()
+        server.wait_finish()
+        """
+    else:
+        print("Cannot start server")
         sys.exit(code)
-
-    stop_event.wait()
-    server.stop()
 
 
 if __name__ == "__main__":
