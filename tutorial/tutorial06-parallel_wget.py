@@ -1,22 +1,30 @@
+import sys
+
 import pywf as wf
-import sys, os
+
 
 class Context:
     def __init__(self):
         pass
-    pass
+
 
 def parallel_callback(p):
     sz = p.size()
     for i in range(sz):
         ctx = p.series_at(i).get_context()
         if ctx.state == wf.WFT_STATE_SUCCESS:
-            print("url:{} chunked:{} keep_alive:{} status_code:{} http_version:{}".format(ctx.url,
-                ctx.chunked, ctx.keep_alive, ctx.status_code, ctx.http_version
-            ))
+            print(
+                "url:{} chunked:{} keep_alive:{} status_code:{} http_version:{}".format(
+                    ctx.url,
+                    ctx.chunked,
+                    ctx.keep_alive,
+                    ctx.status_code,
+                    ctx.http_version,
+                )
+            )
         else:
             print("url:{} state:{} error:{}".format(ctx.url, ctx.state, ctx.error))
-    pass
+
 
 def http_callback(t):
     ctx = wf.series_of(t).get_context()
@@ -30,12 +38,15 @@ def http_callback(t):
     ctx.http_version = resp.get_http_version()
     ctx.body = resp.get_body()
 
+
 def main():
     parallel_work = wf.create_parallel_work(parallel_callback)
     for url in sys.argv[1:]:
-        if(url[:7].lower() != "http://" and url[:8].lower() != "https://"):
+        if url[:7].lower() != "http://" and url[:8].lower() != "https://":
             url = "http://" + url
-        task = wf.create_http_task(url, redirect_max=4, retry_max=2, callback=http_callback)
+        task = wf.create_http_task(
+            url, redirect_max=4, retry_max=2, callback=http_callback
+        )
         req = task.get_req()
         req.add_header_pair("Accept", "*/*")
         req.add_header_pair("User-Agent", "Wget/1.14 (linux-gnu)")
@@ -47,6 +58,7 @@ def main():
         parallel_work.add_series(series)
     wf.start_series_work(parallel_work, None)
     wf.wait_finish()
+
 
 # Usage: python3 tutorial06-parallel_wget.py https://www.sogou.com/ https://zhihu.sogou.com/
 if __name__ == "__main__":

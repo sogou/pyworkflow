@@ -1,18 +1,26 @@
-import pywf as wf
-import sys, os, signal, errno
+import errno
+import os
+import signal
+import sys
 import threading
+
+import pywf as wf
+
 
 class Context:
     def __init__(self):
         pass
-    pass
+
 
 cv = threading.Condition()
+
+
 def Stop(signum, frame):
     print("Stop server:", signum)
     cv.acquire()
     cv.notify()
     cv.release()
+
 
 def reply_callback(proxy_task):
     series = wf.series_of(proxy_task)
@@ -20,13 +28,18 @@ def reply_callback(proxy_task):
     proxy_resp = proxy_task.get_resp()
     sz = proxy_resp.get_body_size()
     if proxy_task.get_state() == wf.WFT_STATE_SUCCESS:
-        print("{} Success, Http Status:{} Body Length:{}".format(
-            ctx.url, proxy_resp.get_status_code(), sz
-        ))
+        print(
+            "{} Success, Http Status:{} Body Length:{}".format(
+                ctx.url, proxy_resp.get_status_code(), sz
+            )
+        )
     else:
-        print("{} Reply failed:{} Body Length:{}".format(
-            ctx.url, os.strerror(proxy_task.get_error()), sz
-        ))
+        print(
+            "{} Reply failed:{} Body Length:{}".format(
+                ctx.url, os.strerror(proxy_task.get_error()), sz
+            )
+        )
+
 
 def http_callback(t):
     state = t.get_state()
@@ -45,7 +58,7 @@ def http_callback(t):
         if not ctx.is_keep_alive:
             proxy_resp.set_header_pair("Connection", "close")
     else:
-        errstr = ''
+        errstr = ""
         if state == wf.WFT_STATE_SYS_ERROR:
             errstr = "system error: {}".format(os.strerror(error))
         elif state == wf.WFT_STATE_DNS_ERROR:
@@ -54,11 +67,14 @@ def http_callback(t):
             errstr = "SSL error: {}".format(error)
         else:
             errstr = "URL error (Cannot be a HTTPS proxy)"
-        print("{} Fetch failed, state:{} error:{} {}".format(
-            ctx.url, state, error, errstr
-        ))
+        print(
+            "{} Fetch failed, state:{} error:{} {}".format(
+                ctx.url, state, error, errstr
+            )
+        )
         proxy_resp.set_status_code("404")
         proxy_resp.append_body(b"<html>404 Not Found.</html>")
+
 
 def process(t):
     req = t.get_req()
@@ -74,8 +90,9 @@ def process(t):
     http_task.get_resp().set_size_limit(200 * 1024 * 1024)
     series << http_task
 
+
 def main():
-    if(len(sys.argv) != 2):
+    if len(sys.argv) != 2:
         print("Usage {} <port>".format(sys.argv[0]))
         sys.exit(1)
     port = int(sys.argv[1])
@@ -91,6 +108,7 @@ def main():
     else:
         print("Cannot start server")
         sys.exit(1)
+
 
 # Test it: curl -x http://localhost:10086/ http://sogou.com
 if __name__ == "__main__":
