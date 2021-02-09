@@ -76,6 +76,11 @@ public:
     void set_receive_timeout(int t){ this->get()->set_receive_timeout(t); }
     void set_keep_alive(int t)     { this->get()->set_keep_alive(t); }
     void set_callback(_py_callback_t cb) {
+        // The deleter will destruct both cb and user_data,
+        // but now we just want to reset cb, so we must clear user_data first,
+        // and set user_data at the end
+        py::object obj = this->get_user_data();
+        this->set_user_data(py::none());
         auto deleter = std::make_shared<TaskDeleterWrapper<_py_callback_t, OriginType>>(
             std::move(cb), this->get());
         this->get()->set_callback([deleter](OriginType *p) {
@@ -87,6 +92,7 @@ public:
             }
             py_callback_wrapper(deleter->get_func(), PyWFNetworkTask<Req, Resp>(p));
         });
+        this->set_user_data(obj);
     }
     void set_user_data(py::object obj) {
         void *old = this->get()->user_data;
@@ -307,13 +313,16 @@ public:
     PyWFServer(_py_process_t proc)
         : process(std::move(proc)),
         server([this](WFNetworkTask<typename Req::OriginType, typename Resp::OriginType> *p) {
+            // TODO this is only for http server
             auto req = p->get_req();
             const void *data = nullptr;
             size_t size = 0;
             if(req->get_parsed_body(&data, &size) && size > 0) {
                 req->append_output_body_nocopy(data, size);
             }
-            py_callback_wrapper(this->process, PyWFNetworkTask<Req, Resp>(p));
+            PyWFNetworkTask<Req, Resp> pytask = PyWFNetworkTask<Req, Resp>(p);
+            pytask.set_callback(nullptr);
+            py_callback_wrapper(this->process, pytask);
         }) {}
     PyWFServer(WFServerParams params, _py_process_t proc)
         : process(std::move(proc)),
@@ -324,7 +333,9 @@ public:
             if(req->get_parsed_body(&data, &size) && size > 0) {
                 req->append_output_body_nocopy(data, size);
             }
-            py_callback_wrapper(this->process, PyWFNetworkTask<Req, Resp>(p));
+            PyWFNetworkTask<Req, Resp> pytask = PyWFNetworkTask<Req, Resp>(p);
+            pytask.set_callback(nullptr);
+            py_callback_wrapper(this->process, pytask);
         }) {}
     int start_0(unsigned short port) {
         return server.start(port);

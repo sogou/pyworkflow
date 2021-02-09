@@ -4,6 +4,17 @@
 #include "workflow/WFTask.h"
 #include <sstream>
 
+static constexpr struct WFGlobalSettings PYWF_GLOBAL_SETTINGS_DEFAULT =
+{
+    .endpoint_params = ENDPOINT_PARAMS_DEFAULT,
+    .dns_ttl_default = 12 * 3600,
+    .dns_ttl_min     = 180,
+    .dns_threads     = 4,
+    .poller_threads  = 4,
+    .handler_threads = 4,
+    .compute_threads = 4,
+};
+
 std::mutex CountableSeriesWork::series_mtx;
 size_t CountableSeriesWork::series_counter = 0;
 std::condition_variable CountableSeriesWork::series_cv;
@@ -63,6 +74,10 @@ void PyWorkflow_library_init(const struct WFGlobalSettings s) {
     WORKFLOW_library_init(&s);
 }
 
+WFGlobalSettings get_global_settings() {
+    return *WFGlobal::get_global_settings();
+}
+
 PySeriesWork py_series_of(const PySubTask &t) {
     SeriesWork *s = series_of(t.get());
     return PySeriesWork(s);
@@ -83,6 +98,7 @@ void inner_init() {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
     OPENSSL_init_ssl(0, NULL);
 #endif
+    WORKFLOW_library_init(&PYWF_GLOBAL_SETTINGS_DEFAULT);
 }
 
 void init_common_types(py::module_ &wf) {
@@ -119,10 +135,22 @@ void init_common_types(py::module_ &wf) {
         .def_readwrite("ssl_connect_timeout", &EndpointParams::ssl_connect_timeout)
     ;
     py::class_<WFGlobalSettings>(wf, "GlobalSettings")
-        .def(py::init([]() { return GLOBAL_SETTINGS_DEFAULT; }))
+        .def(py::init([]() { return PYWF_GLOBAL_SETTINGS_DEFAULT; }))
         .def("__str__", [](const WFGlobalSettings &self) -> std::string {
             (void)self;
-            return "GlobalSettings { TODO }";
+            std::ostringstream oss;
+            oss << "GlobalSettings {EndpointParams {"
+            << "max_connections: " << self.endpoint_params.max_connections
+            << ", connect_timeout: " << self.endpoint_params.connect_timeout
+            << ", response_timeout: " << self.endpoint_params.response_timeout
+            << ", ssl_connect_timeout: " << self.endpoint_params.ssl_connect_timeout
+            << "}, dns_ttl_default: " << self.dns_ttl_default
+            << ", dns_ttl_min: " << self.dns_ttl_min
+            << ", poller_threads: " << self.poller_threads
+            << ", handler_threads: " << self.handler_threads
+            << ", compute_threads: " << self.compute_threads
+            << "}";
+            return oss.str();
         })
         .def_readwrite("endpoint_params", &WFGlobalSettings::endpoint_params)
         .def_readwrite("dns_ttl_default", &WFGlobalSettings::dns_ttl_default)
@@ -164,6 +192,7 @@ void init_common_types(py::module_ &wf) {
     ;
 
     wf.def("WORKFLOW_library_init", &PyWorkflow_library_init);
+    wf.def("get_global_settings", &get_global_settings);
     wf.def("create_series_work",
         static_cast<PySeriesWork(*)(PySubTask&, py_series_callback_t)>(&create_series_work),
         py::arg("first"), py::arg("callback")
