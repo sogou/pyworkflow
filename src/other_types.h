@@ -104,6 +104,7 @@ public:
 class PyWFGoTask : public PySubTask {
 public:
     using OriginType = WFGoTask;
+    using _py_go_callback_t = std::function<void(PyWFGoTask)>;
     PyWFGoTask()                    : PySubTask()  {}
     PyWFGoTask(OriginType *p)       : PySubTask(p) {}
     PyWFGoTask(const PyWFGoTask &o) : PySubTask(o) {}
@@ -111,6 +112,39 @@ public:
     void start() {
         assert(!series_of(this->get()));
         CountableSeriesWork::start_series_work(this->get(), nullptr);
+    }
+    void dismiss() {
+        this->get()->dismiss();
+    }
+    int get_state() const {
+        return this->get()->get_state();
+    }
+    int get_error() const {
+        return this->get()->get_error();
+    }
+    void set_user_data(py::object obj) {
+        void *old = this->get()->user_data;
+        if(old != nullptr) {
+            delete static_cast<py::object*>(old);
+        }
+        py::object *p = nullptr;
+        if(obj.is_none() == false) p = new py::object(obj);
+        this->get()->user_data = static_cast<void*>(p);
+    }
+    py::object get_user_data() const {
+        void *context = this->get()->user_data;
+        if(context == nullptr) return py::none();
+        return *static_cast<py::object*>(context);
+    }
+    void set_callback(_py_go_callback_t cb) {
+        py::object obj = this->get_user_data();
+        this->set_user_data(py::none());
+        auto deleter = std::make_shared<TaskDeleterWrapper<_py_go_callback_t, OriginType>>(
+            std::move(cb), this->get());
+        this->get()->set_callback([deleter](OriginType *p) {
+            py_callback_wrapper(deleter->get_func(), PyWFGoTask(p));
+        });
+        this->set_user_data(obj);
     }
 };
 
