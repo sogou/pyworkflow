@@ -5,7 +5,7 @@ import threading
 import pywf as wf
 
 
-def handle(task):
+def process(task):
     request = task.get_req()
     response = task.get_resp()
 
@@ -34,7 +34,7 @@ def main():
 
     port = int(sys.argv[1])
 
-    server = wf.HttpServer(handle)
+    server = wf.HttpServer(process)
     stop_event = threading.Event()
 
     def stop(*args):
