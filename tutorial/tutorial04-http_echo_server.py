@@ -26,7 +26,7 @@ def process(task):
     response.add_header_pair("Content-Type", "text/html")
     response.add_header_pair("Server", "Sogou Python3 WFHttpServer")
     seq = task.get_task_seq()
-    if seq == 9:  # close after 9 requests
+    if seq == 9:  # close after 10 requests, seq start from 0
         resp.add_header_pair("Connection", "close")
 
 
