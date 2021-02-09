@@ -313,13 +313,16 @@ public:
     PyWFServer(_py_process_t proc)
         : process(std::move(proc)),
         server([this](WFNetworkTask<typename Req::OriginType, typename Resp::OriginType> *p) {
+            // TODO this is only for http server
             auto req = p->get_req();
             const void *data = nullptr;
             size_t size = 0;
             if(req->get_parsed_body(&data, &size) && size > 0) {
                 req->append_output_body_nocopy(data, size);
             }
-            py_callback_wrapper(this->process, PyWFNetworkTask<Req, Resp>(p));
+            PyWFNetworkTask<Req, Resp> pytask = PyWFNetworkTask<Req, Resp>(p);
+            pytask.set_callback(nullptr);
+            py_callback_wrapper(this->process, pytask);
         }) {}
     PyWFServer(WFServerParams params, _py_process_t proc)
         : process(std::move(proc)),
@@ -330,7 +333,9 @@ public:
             if(req->get_parsed_body(&data, &size) && size > 0) {
                 req->append_output_body_nocopy(data, size);
             }
-            py_callback_wrapper(this->process, PyWFNetworkTask<Req, Resp>(p));
+            PyWFNetworkTask<Req, Resp> pytask = PyWFNetworkTask<Req, Resp>(p);
+            pytask.set_callback(nullptr);
+            py_callback_wrapper(this->process, pytask);
         }) {}
     int start_0(unsigned short port) {
         return server.start(port);
