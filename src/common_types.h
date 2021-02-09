@@ -69,6 +69,7 @@ public:
         if(context != nullptr) {
             delete static_cast<py::object*>(context);
         }
+        t->user_data = nullptr;
     }
 private:
     Func f;

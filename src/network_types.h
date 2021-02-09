@@ -76,6 +76,11 @@ public:
     void set_receive_timeout(int t){ this->get()->set_receive_timeout(t); }
     void set_keep_alive(int t)     { this->get()->set_keep_alive(t); }
     void set_callback(_py_callback_t cb) {
+        // The deleter will destruct both cb and user_data,
+        // but now we just want to reset cb, so we must clear user_data first,
+        // and set user_data at the end
+        py::object obj = this->get_user_data();
+        this->set_user_data(py::none());
         auto deleter = std::make_shared<TaskDeleterWrapper<_py_callback_t, OriginType>>(
             std::move(cb), this->get());
         this->get()->set_callback([deleter](OriginType *p) {
@@ -87,6 +92,7 @@ public:
             }
             py_callback_wrapper(deleter->get_func(), PyWFNetworkTask<Req, Resp>(p));
         });
+        this->set_user_data(obj);
     }
     void set_user_data(py::object obj) {
         void *old = this->get()->user_data;
