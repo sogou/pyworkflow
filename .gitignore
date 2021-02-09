@@ -3,3 +3,6 @@ dist
 /pywf.*
 cmake_*
 localtest
+
+# pyenv
+.python-version

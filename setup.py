@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import shutil
 import subprocess
+import sys
 
-from setuptools import setup, Extension
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -94,15 +94,12 @@ class CMakeBuild(build_ext):
             os.makedirs(self.build_temp)
 
         cmake = "cmake"
-        if shutil.which('cmake3') != None:
+        if shutil.which("cmake3") != None:
             cmake = "cmake3"
 
-        subprocess.check_call(
-            [cmake, ext.sourcedir] + cmake_args, cwd=self.build_temp
-        )
-        subprocess.check_call(
-            [cmake, "--build", "."] + build_args, cwd=self.build_temp
-        )
+        subprocess.check_call([cmake, ext.sourcedir] + cmake_args, cwd=self.build_temp)
+        subprocess.check_call([cmake, "--build", "."] + build_args, cwd=self.build_temp)
+
 
 setup(
     name="pywf",
@@ -117,5 +114,15 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     license="Apache License 2.0",
-    packages=['pywf']
+    packages=["pywf"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: Implementation :: CPython",
+    ],
 )
