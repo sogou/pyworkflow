@@ -1,4 +1,8 @@
 # PyWorkflow(PyWF) - A Python Binding of C++ Workflow
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://github.com/sogou/pyworkflow/blob/master/LICENSE)
+[![Language](https://img.shields.io/badge/language-c++-red.svg)](https://en.cppreference.com/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pywf.svg)](https://pypi.python.org/pypi/pywf)
+[![PyPI](https://img.shields.io/pypi/v/pywf.svg)](https://pypi.python.org/pypi/pywf)
 
 ## 概览
 [C++ Workflow](https://github.com/sogou/workflow)是一个高性能的异步引擎，本项目着力于实现一个Python版的Workflow，让Python用户也能享受Workflow带来的绝佳体验。
