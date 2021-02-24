@@ -48,6 +48,14 @@ void release_wrapped_function(std::function<R(Args...)> &f) {
     if(f) f = nullptr;
 }
 
+template<typename T>
+struct pytype {
+    using type = void;
+};
+
+template<typename T>
+using pytype_t = typename pytype<T>::type;
+
 template<typename Func, typename Task>
 class TaskDeleterWrapper {
 public:

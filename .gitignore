@@ -1,8 +1,13 @@
+# build
 build
 dist
 /pywf.*
 cmake_*
 localtest
+
+# pytest
+.pytest_cache
+unittest/__pycache__
 
 # pyenv
 .python-version
