@@ -102,6 +102,41 @@ private:
     Task *t{nullptr};
 };
 
+class __file_helper {
+public:
+    template<typename Task>
+    static int get_fd(Task*)             { return -1; }
+    static int get_fd(WFFileIOTask *t)   { return t->get_args()->fd; }
+    static int get_fd(WFFileVIOTask *t)  { return t->get_args()->fd; }
+    static int get_fd(WFFileSyncTask *t) { return t->get_args()->fd; }
+
+    template<typename Task>
+    static off_t get_offset(Task*)            { return -1; }
+    static off_t get_offset(WFFileIOTask *t)  { return t->get_args()->offset; }
+    static off_t get_offset(WFFileVIOTask *t) { return t->get_args()->offset; }
+
+    template<typename Task>
+    static size_t get_count(Task*)           { return 0; }
+    static size_t get_count(WFFileIOTask *t) { return t->get_args()->count; }
+
+    template<typename Task>
+    static py::object get_data(Task*) { return py::none(); }
+    static py::object get_data(WFFileIOTask *t) {
+        auto *arg = t->get_args();
+        const char *buf = static_cast<const char*>(arg->buf);
+        return py::bytes(buf, arg->count);
+    }
+    static py::object get_data(WFFileVIOTask *t) {
+        py::list contents;
+        auto *arg = t->get_args();
+        for(int i = 0; i < arg->iovcnt; i++) {
+            const iovec &iov = arg->iov[i];
+            contents.append(py::bytes((const char*)iov.iov_base, iov.iov_len));
+        }
+        return contents;
+    }
+};
+
 template<typename Arg>
 class PyWFFileTask : public PySubTask {
     using _py_callback_t = std::function<void(PyWFFileTask<Arg>)>;
@@ -119,7 +154,10 @@ public:
     void dismiss() {
         this->get()->dismiss();
     }
-    ArgType get_args()      { return ArgType(this->get()->get_args()); }
+    int get_fd() const          { return __file_helper::get_fd(this->get()); }
+    off_t get_offset() const    { return __file_helper::get_offset(this->get()); }
+    size_t get_count() const    { return __file_helper::get_count(this->get()); }
+    py::object get_data() const { return __file_helper::get_data(this->get()); }
     long get_retval() const { return this->get()->get_retval();        }
     int get_state()   const { return this->get()->get_state();         }
     int get_error()   const { return this->get()->get_error();         }
@@ -144,19 +182,6 @@ public:
     }
 };
 
-class CopyableFileIOArgs {
-public:
-    CopyableFileIOArgs(int fd, std::string content, off_t offset)
-        : fd(fd), content(std::move(content)), offset(offset) {}
-    int get_fd()            { return fd;                 }
-    py::bytes get_content() { return py::bytes(content); }
-    off_t get_offset()      { return offset;             }
-private:
-    int fd;
-    std::string content;
-    off_t offset;
-};
-
 class PyFileIOArgs : public PyWFBase {
 public:
     using OriginType = FileIOArgs;
@@ -164,26 +189,6 @@ public:
     PyFileIOArgs(OriginType *p)         : PyWFBase(p) {}
     PyFileIOArgs(const PyFileIOArgs &o) : PyWFBase(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
-    CopyableFileIOArgs copy() const {
-        return CopyableFileIOArgs(get_fd(), _get_content(), get_offset());
-    }
-    int get_fd() const { return this->get()->fd; }
-    py::bytes get_content() const {
-        auto p = this->get();
-        const char *buf = static_cast<const char*>(p->buf);
-        auto count = p->count;
-        if(p->count > 0) return py::bytes(buf, count);
-        return py::bytes();
-    }
-    off_t get_offset() const { return this->get()->offset; }
-    size_t get_count() const { return this->get()->count; }
-private:
-    std::string _get_content() const {
-        std::string s;
-        auto p = this->get();
-        if(p->count > 0) s.assign((const char*)(p->buf), p->count);
-        return s;
-    }
 };
 
 class PyFileVIOArgs : public PyWFBase {
@@ -193,17 +198,6 @@ public:
     PyFileVIOArgs(OriginType *p)          : PyWFBase(p) {}
     PyFileVIOArgs(const PyFileVIOArgs &o) : PyWFBase(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
-    int get_fd() const { return this->get()->fd; }
-    py::list get_content() const {
-        py::list contents;
-        auto p = this->get();
-        for(int i = 0; i < p->iovcnt; i++) {
-            const iovec &iov = p->iov[i];
-            contents.append(py::bytes((const char*)iov.iov_base, iov.iov_len));
-        }
-        return contents;
-    }
-    off_t get_offset() const { return this->get()->offset; }
 };
 
 class PyFileSyncArgs : public PyWFBase {
@@ -213,7 +207,6 @@ public:
     PyFileSyncArgs(OriginType *p)           : PyWFBase(p) {}
     PyFileSyncArgs(const PyFileSyncArgs &o) : PyWFBase(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
-    int get_fd() const { return this->get()->fd; }
 };
 
 class PyWFTimerTask : public PySubTask {

@@ -26,27 +26,24 @@ def pread_callback(t):
     state = t.get_state()
     error = t.get_error()
     resp = t.get_user_data()
-    args = t.get_args()
 
-    os.close(args.get_fd())
+    os.close(t.get_fd())
     if state != wf.WFT_STATE_SUCCESS or t.get_retval() < 0:
         resp.set_status_code("503")
         resp.append_body("<html>503 Internal Server Error</html>")
     else:
-        resp.append_body(args.get_content())
+        resp.append_body(t.get_data())
 
-def process(t):
+def process(root, t):
     req = t.get_req()
     resp = t.get_resp()
 
     request_uri = req.get_request_uri()
-    if request_uri == "/":
-        path = "/index.html"
-    else:
-        index = request_uri.find("?")
-        if index >= 0:
-            request_uri = request_uri[0:index]
-        path = "." + request_uri
+    index = request_uri.find("?")
+    path = root + (request_uri if index == -1 else request_uri[:index])
+
+    if path[-1] == "/":
+        path += "index.html"
 
     try:
         fd = os.open(path, os.O_RDONLY)
@@ -61,14 +58,20 @@ def process(t):
     pread_task.set_user_data(resp)
     series.push_back(pread_task)
 
+def get_process(root):
+    def wrapper(task):
+        process(root, task)
+    return wrapper
+
 def main():
     argc = len(sys.argv)
     if argc != 2 and argc != 3 and argc != 5:
         print("Usage {} <port> [root path] [cert file] [key file]".format(sys.argv[0]))
         sys.exit(1)
     port = int(sys.argv[1])
+    root = sys.argv[2] if argc > 2 else "."
     signal.signal(signal.SIGINT, Stop)
-    server = wf.HttpServer(process)
+    server = wf.HttpServer(get_process(root))
 
     if argc >= 4:
         ret = server.start(port, sys.argv[3], sys.argv[4])
@@ -85,6 +88,7 @@ def main():
         sys.exit(1)
 
 
-# Test it: curl -x http://localhost:10086/ http://sogou.com
+# Run it: python3 tutorial09-http_file_server.py 10086 .
+# Test it: curl "http://localhost:10086/"
 if __name__ == "__main__":
     main()
