@@ -61,6 +61,6 @@ def main():
     wf.wait_finish()
 
 
-# Usage: python3 tutorial01-wget.py http://www.sogou.com/
+# Usage: python3 tutorial02-redis_cli redis://:password@hostname/dbnum key value
 if __name__ == "__main__":
     main()
