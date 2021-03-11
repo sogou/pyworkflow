@@ -1,6 +1,7 @@
 #include "network_types.h"
 
 void init_http_types(py::module_&);
+void init_redis_types(py::module_&);
 
 void init_network_types(py::module_ &wf) {
     py::class_<WFServerParams>(wf, "ServerParams")
@@ -14,4 +15,5 @@ void init_network_types(py::module_ &wf) {
     ;
 
     init_http_types(wf);
+    init_redis_types(wf);
 }
