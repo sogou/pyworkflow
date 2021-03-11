@@ -13,6 +13,7 @@ pybind11_add_module(cpp_pyworkflow
     src/common_types.cc
     src/network_types.cc
     src/http_types.cc
+    src/redis_types.cc
     src/other_types.cc
     src/pyworkflow.cc)
 
