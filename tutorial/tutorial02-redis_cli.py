@@ -34,7 +34,7 @@ def redis_callback(t):
         n = wf.create_redis_task(user_data.url, retry_max=2, callback=redis_callback)
         n.get_req().set_request("GET", [user_data.key])
         wf.series_of(t).push_back(n)
-        print("Redis SET request sucess. Trying to GET...")
+        print("Redis SET request success. Trying to GET...")
     else:
         if val.is_string():
             print("Redis GET success. Value = {}".format(val.string_value()))
