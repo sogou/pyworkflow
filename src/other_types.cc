@@ -147,6 +147,14 @@ PyWFEmptyTask create_empty_task() {
     return task;
 }
 
+PyWFDynamicTask create_dynamic_task(py_dynamic_create_t& create) {
+    auto ptr = WFTaskFactory::create_dynamic_task([create](WFDynamicTask *t) {
+        PySubTask&& new_task = create(PyWFDynamicTask(t));
+        return new_task.get();
+    });
+    return PyWFDynamicTask(ptr);
+}
+
 void init_other_types(py::module_ &wf) {
     py::class_<PyWFFileIOTask, PySubTask>(wf, "FileIOTask")
         .def("is_null",       &PyWFFileIOTask::is_null)
@@ -232,6 +240,14 @@ void init_other_types(py::module_ &wf) {
         .def("get_error",     &PyWFEmptyTask::get_error)
     ;
 
+    py::class_<PyWFDynamicTask, PySubTask>(wf, "DynamicTask")
+        .def("is_null",       &PyWFDynamicTask::is_null)
+        .def("start",         &PyWFDynamicTask::start)
+        .def("dismiss",       &PyWFDynamicTask::dismiss)
+        .def("get_state",     &PyWFDynamicTask::get_state)
+        .def("get_error",     &PyWFDynamicTask::get_error)
+    ;
+
     py::class_<PyWaitGroup>(wf, "WaitGroup")
         .def(py::init<int>())
         .def("done", &PyWaitGroup::done, py::call_guard<py::gil_scoped_release>())
@@ -255,4 +271,5 @@ void init_other_types(py::module_ &wf) {
     wf.def("create_go_task",      &create_go_task, py::arg("function"));
     wf.def("create_go_task",      &create_go_task_with_name, py::arg("name"), py::arg("function"));
     wf.def("create_empty_task",   &create_empty_task);
+    wf.def("create_dynamic_task", &create_dynamic_task, py::arg("creater"));
 }

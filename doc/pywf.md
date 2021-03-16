@@ -35,7 +35,7 @@ isinstance(p, wf.SubTask) # parallel work是一种task
   - 取消串行
 - is_canceled() -> bool
   - 串行是否被取消
-- set_callback(Callable[[wf.SeriesWork], None]) -> None
+- set_callback(Callable[[wf.ConstSeriesWork], None]) -> None
   - 为串行设置回调函数，将参数设置为`None`可以取消回调
 - set_context(object) -> None
   - 用户可以为串行设置一个Python object作为context，在串行生命周期存续的任意时刻将object取回任意次
@@ -47,6 +47,8 @@ isinstance(p, wf.SubTask) # parallel work是一种task
   - 将一个任务加入到串行中，作用同`push_back`
   - 但用户可以方便地执行 `series << task1 << task2 << task3`
 
+另有一个`ConstSeriesWork`，仅可调用`is_null`、`is_canceled`、`get_context`几个函数
+
 ### ParallelWork
 - is_null() -> bool
   - 判断该对象是否为空指针
@@ -56,7 +58,7 @@ isinstance(p, wf.SubTask) # parallel work是一种task
   - 取消并行中的所有任务
 - add_series(wf.SeriesWork)
   - 将串行加入到并行中，并行由一组串行构成
-- series_at(int) -> wf.SeriesWork
+- series_at(int) -> wf.ConstSeriesWork
   - 获取指定位置上的Series，用户需保证该位置合法
 - set_context(object) -> None
   - 用户可以为并行设置一个Python object作为context，在并行生命周期存续的任意时刻将object取回任意次
@@ -66,19 +68,21 @@ isinstance(p, wf.SubTask) # parallel work是一种task
   - 取回context，若从未设置过context，此调用返回`None`
 - size() -> int
   - 获取并行中串行的个数
-- set_callback(Callable[[wf.ParallelWork], None]) -> None
+- set_callback(Callable[[wf.ConstParallelWork], None]) -> None
   - 为并行设置回调函数，将参数设置为`None`可以取消回调
+
+另有一个`ConstParallelWork`，仅可调用`is_null`、`series_at`、`get_context`、`size`几个函数
 
 ### 几个全局函数
 - wf.WORKFLOW_library_init(wf.GlobalSettings) -> None
   - 初始化workflow全局参数
-- wf.create_series_work(wf.SubTask, Callable[[wf.SeriesWork], None]) -> None
-- wf.create_series_work(wf.SubTask, wf.SubTask, Callable[[wf.SeriesWork], None]) -> None
-- wf.start_series_work(wf.SubTask, Callable[[wf.SeriesWork], None]) -> None
-- wf.start_series_work(wf.SubTask, wf.SubTask, Callable[[wf.SeriesWork], None]) -> None
-- wf.create_parallel_work(Callable[[wf.ParallelWork], None]) -> None
-- wf.create_parallel_work(list[wf.SeriesWork], Callable[[wf.ParallelWork], None]) -> None
-- wf.start_parallel_work(list[wf.SeriesWork], Callable[[wf.ParallelWork], None]) -> None
+- wf.create_series_work(wf.SubTask, Callable[[wf.ConstSeriesWork], None]) -> None
+- wf.create_series_work(wf.SubTask, wf.SubTask, Callable[[wf.ConstSeriesWork], None]) -> None
+- wf.start_series_work(wf.SubTask, Callable[[wf.ConstSeriesWork], None]) -> None
+- wf.start_series_work(wf.SubTask, wf.SubTask, Callable[[wf.ConstSeriesWork], None]) -> None
+- wf.create_parallel_work(Callable[[wf.ConstParallelWork], None]) -> None
+- wf.create_parallel_work(list[wf.SeriesWork], Callable[[wf.ConstParallelWork], None]) -> None
+- wf.start_parallel_work(list[wf.SeriesWork], Callable[[wf.ConstParallelWork], None]) -> None
 - wf.series_of(wf.SubTask) -> wf.SeriesWork
   - 获取task所在的series
   - 未被加入到sereis的task会返回空指针，用series.is_null()来检查
