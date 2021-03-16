@@ -161,7 +161,9 @@ void init_common_types(py::module_ &wf) {
         .def_readwrite("compute_threads", &WFGlobalSettings::compute_threads)
     ;
     py::class_<PyWFBase>(wf, "WFBase");
-    py::class_<PySubTask, PyWFBase>(wf, "SubTask");
+    py::class_<PySubTask, PyWFBase>(wf, "SubTask")
+        .def("is_null", &PySubTask::is_null)
+    ;
 
     py::class_<PyConstSeriesWork, PyWFBase>(wf, "ConstSeriesWork")
         .def("is_null",     &PyConstSeriesWork::is_null)

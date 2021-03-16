@@ -111,8 +111,6 @@ public:
     PySubTask(OriginType *p)       : PyWFBase(p) {}
     PySubTask(const PySubTask &o)  : PyWFBase(o) {}
     OriginType* get()        const { return static_cast<OriginType*>(ptr); }
-    // TODO
-    // get_parent_task, get_pointer, set_pointer
 };
 
 // Derive SeriesWork, release something in destructor
