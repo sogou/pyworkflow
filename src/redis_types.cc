@@ -97,7 +97,7 @@ void init_redis_types(py::module_ &wf) {
         .def(py::init<std::string, RedisValue::ErrorTag>())
 
         .def("__len__",       &RedisValue::arr_size)
-        .def("__getitem__",   &redis_arr_at)
+        .def("__getitem__",   &redis_arr_at_ref)
         .def("__setitem__",   &redis_arr_set)
         .def("__copy__",      &redis_copy)
         .def("__deepcopy__",  &redis_copy)
@@ -120,7 +120,7 @@ void init_redis_types(py::module_ &wf) {
         .def("is_array",      &RedisValue::is_array)
         .def("is_string",     &RedisValue::is_string)
 
-        .def("string_value",   &redis_bytes_value)
+        .def("string_value",  &redis_bytes_value)
         .def("int_value",     &RedisValue::int_value)
         .def("arr_size",      &RedisValue::arr_size)
         .def("arr_clear",     &RedisValue::arr_clear)
