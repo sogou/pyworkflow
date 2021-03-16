@@ -151,6 +151,7 @@ void init_other_types(py::module_ &wf) {
     py::class_<PyWFFileIOTask, PySubTask>(wf, "FileIOTask")
         .def("is_null",       &PyWFFileIOTask::is_null)
         .def("start",         &PyWFFileIOTask::start)
+        .def("dismiss",       &PyWFFileIOTask::dismiss)
         .def("get_state",     &PyWFFileIOTask::get_state)
         .def("get_error",     &PyWFFileIOTask::get_error)
         .def("get_retval",    &PyWFFileIOTask::get_retval)
@@ -165,6 +166,7 @@ void init_other_types(py::module_ &wf) {
     py::class_<PyWFFileVIOTask, PySubTask>(wf, "FileVIOTask")
         .def("is_null",       &PyWFFileVIOTask::is_null)
         .def("start",         &PyWFFileVIOTask::start)
+        .def("dismiss",       &PyWFFileVIOTask::dismiss)
         .def("get_state",     &PyWFFileVIOTask::get_state)
         .def("get_error",     &PyWFFileVIOTask::get_error)
         .def("get_retval",    &PyWFFileVIOTask::get_retval)
@@ -178,6 +180,7 @@ void init_other_types(py::module_ &wf) {
     py::class_<PyWFFileSyncTask, PySubTask>(wf, "FileSyncTask")
         .def("is_null",       &PyWFFileSyncTask::is_null)
         .def("start",         &PyWFFileSyncTask::start)
+        .def("dismiss",       &PyWFFileSyncTask::dismiss)
         .def("get_state",     &PyWFFileSyncTask::get_state)
         .def("get_error",     &PyWFFileSyncTask::get_error)
         .def("get_retval",    &PyWFFileSyncTask::get_retval)
@@ -235,21 +238,21 @@ void init_other_types(py::module_ &wf) {
         .def("wait", &PyWaitGroup::wait, py::call_guard<py::gil_scoped_release>())
     ;
 
-    wf.def("create_pread_task", create_pread_task, py::arg("fd"), py::arg("count"),
-        py::arg("offset"), py::arg("callback"));
-    wf.def("create_pwrite_task", create_pwrite_task, py::arg("fd"), py::arg("bytes"),
-        py::arg("count"), py::arg("offset"), py::arg("callback"));
-    wf.def("create_pwritev_task", create_pwritev_task, py::arg("fd"), py::arg("bytes_list"),
-        py::arg("offset"), py::arg("callback"));
-    wf.def("create_fsync_task", create_fsync_task, py::arg("fd"), py::arg("callback"));
-    wf.def("create_fdsync_task", create_fdsync_task, py::arg("fd"), py::arg("callback"));
+    wf.def("create_pread_task",   &create_pread_task, py::arg("fd"), py::arg("count"),
+                                   py::arg("offset"), py::arg("callback"));
+    wf.def("create_pwrite_task",  &create_pwrite_task, py::arg("fd"), py::arg("data"),
+                                   py::arg("count"), py::arg("offset"), py::arg("callback"));
+    wf.def("create_pwritev_task", &create_pwritev_task, py::arg("fd"), py::arg("data_list"),
+                                   py::arg("offset"), py::arg("callback"));
+    wf.def("create_fsync_task",   &create_fsync_task, py::arg("fd"), py::arg("callback"));
+    wf.def("create_fdsync_task",  &create_fdsync_task, py::arg("fd"), py::arg("callback"));
 
-    wf.def("create_timer_task", create_timer_task, py::arg("microseconds"), py::arg("callback"));
-    wf.def("create_counter_task", create_counter_task_no_name, py::arg("target"), py::arg("callback"));
-    wf.def("create_counter_task", create_counter_task, py::arg("name"), py::arg("target"),
-        py::arg("callback"));
-    wf.def("count_by_name", count_by_name, py::arg("name"), py::arg("n"));
-    wf.def("create_go_task", create_go_task, py::arg("function"));
-    wf.def("create_go_task", create_go_task_with_name, py::arg("name"), py::arg("function"));
-    wf.def("create_empty_task", create_empty_task);
+    wf.def("create_timer_task",   &create_timer_task, py::arg("microseconds"), py::arg("callback"));
+    wf.def("create_counter_task", &create_counter_task_no_name, py::arg("target"), py::arg("callback"));
+    wf.def("create_counter_task", &create_counter_task, py::arg("name"), py::arg("target"),
+                                   py::arg("callback"));
+    wf.def("count_by_name",       &count_by_name, py::arg("name"), py::arg("n"));
+    wf.def("create_go_task",      &create_go_task, py::arg("function"));
+    wf.def("create_go_task",      &create_go_task_with_name, py::arg("name"), py::arg("function"));
+    wf.def("create_empty_task",   &create_empty_task);
 }

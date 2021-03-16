@@ -9,42 +9,39 @@
 #include <condition_variable>
 #include <mutex>
 #include <chrono>
+#include <cstdlib>
 
-
-//#define DEBUG(x) do { x } while(0)
-#define DEBUG(x)
 namespace py = pybind11;
 
-inline std::string charptr2str(const char *p) {
-    std::string s;
-    if(p) s.assign(p);
-    return s;
-}
 inline bool has_gil() {
     return PyGILState_Check();
 }
-inline void check_gil(const std::string &s) {
-    if (PyGILState_Check()) {
-        std::cout << s << " have GIL" << std::endl;
-    }
-    else {
-        std::cout << s << " dont have GIL" << std::endl;
-    }
-}
+
+/**
+ * All call of python function from workflow threads need to acquire
+ * gil first. It is not allowed to throw exceptions from python
+ * callback functions, if it does, the program print the error info to
+ * stderr and exit immediately.
+ */
 template<typename Callable, typename... Args>
 void py_callback_wrapper(Callable &&C, Args&& ...args) {
-    // All callback by workflow thread need to acquire gil
-    if(has_gil()) { // TODO: but maybe nothing todo
-    }
     py::gil_scoped_acquire acquire;
-    // C should not throw any exception
-    if(C) C(args...); // TODO C may not be std::function
+    try {
+        if(C) C(args...);
+    }
+    catch(py::error_already_set &e) {
+        std::cerr << e.what() << std::endl;
+        std::quick_exit(1);
+    }
 }
+
+/**
+ * This is used to destruct a std::function object, we need to acquire
+ * gil because there may be python object captured by std::function.
+ */
 template<typename R, typename... Args>
 void release_wrapped_function(std::function<R(Args...)> &f) {
     py::gil_scoped_acquire acquire;
-    // There may be python object in f
-    // Release it under GIL
     if(f) f = nullptr;
 }
 
@@ -102,7 +99,7 @@ public:
     }
     void* get() const { return ptr; }
     bool is_null() const { return ptr == nullptr; }
-    virtual ~PyWFBase() = default; // TODO what if not virtual
+    virtual ~PyWFBase() = default;
 protected:
     void *ptr;
 };
@@ -169,7 +166,6 @@ protected:
             std::unique_lock<std::mutex> lk(series_mtx);
             --series_counter;
             if(series_counter == 0) series_cv.notify_all();
-            DEBUG(std::cout << "CountableSeriesWork:" << series_counter << std::endl;);
         }
     }
 };
@@ -205,6 +201,44 @@ protected:
     }
 };
 
+class PyConstSeriesWork : public PyWFBase {
+public:
+    using OriginType = SeriesWork;
+    PyConstSeriesWork()                           : PyWFBase()  {}
+    PyConstSeriesWork(OriginType *p)              : PyWFBase(p) {}
+    PyConstSeriesWork(const PyConstSeriesWork &o) : PyWFBase(o) {}
+    const OriginType* get() const { return static_cast<OriginType*>(ptr); }
+
+    bool is_canceled() const { return this->get()->is_canceled(); }
+    py::object get_context() const {
+        void *context = this->get()->get_context();
+        if(context == nullptr) return py::none();
+        return *static_cast<py::object*>(context);
+    }
+};
+
+class PyConstParallelWork : public PySubTask {
+public:
+    using OriginType = ParallelWork;
+    PyConstParallelWork()                             : PySubTask()  {}
+    PyConstParallelWork(OriginType *p)                : PySubTask(p) {}
+    PyConstParallelWork(const PyConstParallelWork &o) : PySubTask(o) {}
+    const OriginType* get() const { return static_cast<OriginType*>(ptr); }
+
+    PyConstSeriesWork series_at(size_t index) const {
+        auto p = this->get()->series_at(index);
+        return PyConstSeriesWork(const_cast<SeriesWork*>(p));
+    }
+    py::object get_context() const {
+        void *context = this->get()->get_context();
+        if(context == nullptr) return py::none();
+        return *static_cast<py::object*>(context);
+    }
+    size_t size() const {
+        return this->get()->size();
+    }
+};
+
 class PySeriesWork : public PyWFBase {
 public:
     using OriginType = SeriesWork;
@@ -216,31 +250,20 @@ public:
         push_back(t);
         return *this;
     }
-    void start() {
-        this->get()->start();
-    }
-    void dismiss() {
-        this->get()->dismiss();
-    }
-    void push_back(PySubTask &t) {
-        this->get()->push_back(t.get());
-    }
-    void push_front(PySubTask &t) {
-        this->get()->push_front(t.get());
-    }
-    void cancel() {
-        this->get()->cancel();
-    }
-    bool is_canceled() const {
-        return this->get()->is_canceled();
-    }
-    void set_callback(std::function<void(const PySeriesWork)> cb) {
+
+    void start()                  { this->get()->start(); }
+    void dismiss()                { this->get()->dismiss(); }
+    void push_back(PySubTask &t)  { this->get()->push_back(t.get()); }
+    void push_front(PySubTask &t) { this->get()->push_front(t.get()); }
+    void cancel()                 { this->get()->cancel(); }
+    bool is_canceled() const      { return this->get()->is_canceled(); }
+
+    void set_callback(std::function<void(PyConstSeriesWork)> cb) {
         this->get()->set_callback([cb](const SeriesWork *p) mutable {
-            py_callback_wrapper(cb, PySeriesWork(const_cast<SeriesWork*>(p)));
+            py_callback_wrapper(cb, PyConstSeriesWork(const_cast<SeriesWork*>(p)));
         });
     }
     void set_context(py::object obj) {
-        // I must have GIL now
         void *old = this->get()->get_context();
         if(old != nullptr) {
             delete static_cast<py::object*>(old);
@@ -254,7 +277,6 @@ public:
         if(context == nullptr) return py::none();
         return *static_cast<py::object*>(context);
     }
-private:
 };
 
 class PyParallelWork : public PySubTask {
@@ -264,23 +286,20 @@ public:
     PyParallelWork(OriginType *p)           : PySubTask(p) {}
     PyParallelWork(const PyParallelWork &o) : PySubTask(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
+
     void start() {
         assert(!series_of(this->get()));
         CountableSeriesWork::start_series_work(this->get(), nullptr);
     }
-    void dismiss() {
-        this->get()->dismiss();
-    }
-    void add_series(PySeriesWork &series) {
-        this->get()->add_series(series.get());
-    }
-    // TODO series_at python does not has const
-    PySeriesWork series_at(size_t index) const {
+    void dismiss() { this->get()->dismiss(); }
+    void add_series(PySeriesWork &series) { this->get()->add_series(series.get()); }
+
+    PyConstSeriesWork series_at(size_t index) const {
         auto p = this->get()->series_at(index);
-        return PySeriesWork(const_cast<SeriesWork*>(p));
+        return PyConstSeriesWork(const_cast<SeriesWork*>(p));
     }
+
     void set_context(py::object obj) {
-        // I must have GIL now
         void *old = this->get()->get_context();
         if(old != nullptr) {
             delete static_cast<py::object*>(old);
@@ -297,15 +316,14 @@ public:
     size_t size() const {
         return this->get()->size();
     }
-    void set_callback(std::function<void(const PyParallelWork)> cb) {
+    void set_callback(std::function<void(PyConstParallelWork)> cb) {
         this->get()->set_callback([cb](const ParallelWork *p) {
-            py_callback_wrapper(cb, PyParallelWork(const_cast<ParallelWork*>(p)));
+            py_callback_wrapper(cb, PyConstParallelWork(const_cast<ParallelWork*>(p)));
         });
     }
-private:
 };
 
-using py_series_callback_t   = std::function<void(const PySeriesWork)>;
-using py_parallel_callback_t = std::function<void(const PyParallelWork)>;
+using py_series_callback_t   = std::function<void(PyConstSeriesWork)>;
+using py_parallel_callback_t = std::function<void(PyConstParallelWork)>;
 
 #endif // PYWF_COMMON_H
