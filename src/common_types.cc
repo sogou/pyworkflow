@@ -22,33 +22,33 @@ std::condition_variable CountableSeriesWork::series_cv;
 PySeriesWork create_series_work(PySubTask &first, py_series_callback_t cb) {
     auto ptr = CountableSeriesWork::create_series_work(
         first.get(), [cb](const SeriesWork *p) {
-        py_callback_wrapper(cb, PySeriesWork(const_cast<SeriesWork*>(p)));
+        py_callback_wrapper(cb, PyConstSeriesWork(const_cast<SeriesWork*>(p)));
     });
     return PySeriesWork(ptr);
 }
 PySeriesWork create_series_work(PySubTask &first, PySubTask &last, py_series_callback_t cb) {
     auto ptr = CountableSeriesWork::create_series_work(
         first.get(), last.get(), [cb](const SeriesWork *p) {
-        py_callback_wrapper(cb, PySeriesWork(const_cast<SeriesWork*>(p)));
+        py_callback_wrapper(cb, PyConstSeriesWork(const_cast<SeriesWork*>(p)));
     });
     return PySeriesWork(ptr);
 }
 void start_series_work(PySubTask &first, py_series_callback_t cb) {
     CountableSeriesWork::start_series_work(
         first.get(), [cb](const SeriesWork *p) {
-        py_callback_wrapper(cb, PySeriesWork(const_cast<SeriesWork*>(p)));
+        py_callback_wrapper(cb, PyConstSeriesWork(const_cast<SeriesWork*>(p)));
     });
 }
 void start_series_work(PySubTask &first, PySubTask &last, py_series_callback_t cb) {
     CountableSeriesWork::start_series_work(
         first.get(), last.get(), [cb](const SeriesWork *p) {
-        py_callback_wrapper(cb, PySeriesWork(const_cast<SeriesWork*>(p)));
+        py_callback_wrapper(cb, PyConstSeriesWork(const_cast<SeriesWork*>(p)));
     });
 }
 
 PyParallelWork create_parallel_work(py_parallel_callback_t cb) {
     auto ptr = CountableParallelWork::create_parallel_work([cb](const ParallelWork *p) {
-        py_callback_wrapper(cb, PyParallelWork(const_cast<ParallelWork*>(p)));
+        py_callback_wrapper(cb, PyConstParallelWork(const_cast<ParallelWork*>(p)));
     });
     return PyParallelWork(ptr);
 }
@@ -57,7 +57,7 @@ PyParallelWork create_parallel_work(std::vector<PySeriesWork> &v, py_parallel_ca
     for(size_t i = 0; i < v.size(); i++) works[i] = v[i].get();
     auto ptr = CountableParallelWork::create_parallel_work(works.data(), works.size(),
         [cb](const ParallelWork *p) {
-        py_callback_wrapper(cb, PyParallelWork(const_cast<ParallelWork*>(p)));
+        py_callback_wrapper(cb, PyConstParallelWork(const_cast<ParallelWork*>(p)));
     });
     return PyParallelWork(ptr);
 }
@@ -66,7 +66,7 @@ void start_parallel_work(std::vector<PySeriesWork> &v, py_parallel_callback_t cb
     for(size_t i = 0; i < v.size(); i++) works[i] = v[i].get();
     CountableParallelWork::start_parallel_work(works.data(), works.size(),
         [cb](const ParallelWork *p) {
-        py_callback_wrapper(cb, PyParallelWork(const_cast<ParallelWork*>(p)));
+        py_callback_wrapper(cb, PyConstParallelWork(const_cast<ParallelWork*>(p)));
     });
 }
 
@@ -161,7 +161,22 @@ void init_common_types(py::module_ &wf) {
         .def_readwrite("compute_threads", &WFGlobalSettings::compute_threads)
     ;
     py::class_<PyWFBase>(wf, "WFBase");
-    py::class_<PySubTask, PyWFBase>(wf, "SubTask");
+    py::class_<PySubTask, PyWFBase>(wf, "SubTask")
+        .def("is_null", &PySubTask::is_null)
+    ;
+
+    py::class_<PyConstSeriesWork, PyWFBase>(wf, "ConstSeriesWork")
+        .def("is_null",     &PyConstSeriesWork::is_null)
+        .def("is_canceled", &PyConstSeriesWork::is_canceled)
+        .def("get_context", &PyConstSeriesWork::get_context)
+    ;
+    py::class_<PyConstParallelWork, PySubTask>(wf, "ConstParallelWork")
+        .def("is_null",     &PyConstParallelWork::is_null)
+        .def("series_at",   &PyConstParallelWork::series_at)
+        .def("get_context", &PyConstParallelWork::get_context)
+        .def("size",        &PyConstParallelWork::size)
+    ;
+
     py::class_<PySeriesWork, PyWFBase>(wf, "SeriesWork")
         .def("is_null",      &PySeriesWork::is_null)
         .def("__lshift__",   &PySeriesWork::operator<<)
@@ -192,12 +207,13 @@ void init_common_types(py::module_ &wf) {
     ;
 
     wf.def("WORKFLOW_library_init", &PyWorkflow_library_init);
-    wf.def("get_global_settings", &get_global_settings);
+    wf.def("get_global_settings",   &get_global_settings);
+    wf.def("series_of",             &py_series_of);
+
     wf.def("create_series_work",
         static_cast<PySeriesWork(*)(PySubTask&, py_series_callback_t)>(&create_series_work),
         py::arg("first"), py::arg("callback")
     );
-    wf.def("series_of", &py_series_of);
     wf.def("create_series_work",
         static_cast<PySeriesWork(*)(PySubTask&, PySubTask&, py_series_callback_t)>(&create_series_work),
         py::arg("first"), py::arg("last"), py::arg("callback")
@@ -219,8 +235,8 @@ void init_common_types(py::module_ &wf) {
         py::arg("all_series"), py::arg("callback")
     );
     wf.def("start_parallel_work", &start_parallel_work, py::arg("all_series"), py::arg("callback"));
-    wf.def("wait_finish", &CountableSeriesWork::wait_finish, py::call_guard<py::gil_scoped_release>());
+    wf.def("wait_finish",         &CountableSeriesWork::wait_finish, py::call_guard<py::gil_scoped_release>());
     wf.def("wait_finish_timeout", &CountableSeriesWork::wait_finish_timeout, py::call_guard<py::gil_scoped_release>());
-    wf.def("get_error_string", &get_error_string, py::arg("state"), py::arg("error"));
-    wf.def("inner_init", &inner_init);
+    wf.def("get_error_string",    &get_error_string, py::arg("state"), py::arg("error"));
+    wf.def("inner_init",          &inner_init);
 }

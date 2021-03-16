@@ -353,6 +353,24 @@ public:
     int get_error() const { return this->get()->get_error(); }
 };
 
+class PyWFDynamicTask : public PySubTask {
+public:
+    using OriginType = WFDynamicTask;
+    using _py_create_t = std::function<void(WFDynamicTask)>;
+    PyWFDynamicTask()                         : PySubTask()  {}
+    PyWFDynamicTask(OriginType *p)            : PySubTask(p) {}
+    PyWFDynamicTask(const PyWFDynamicTask &o) : PySubTask(o) {}
+    OriginType* get() const { return static_cast<OriginType*>(ptr); }
+
+    void start() {
+        assert(!series_of(this->get()));
+        CountableSeriesWork::start_series_work(this->get(), nullptr);
+    }
+    void dismiss()        { this->get()->dismiss(); }
+    int get_state() const { return this->get()->get_state(); }
+    int get_error() const { return this->get()->get_error(); }
+};
+
 // TODO Cannot call done and wait in same (main) thread
 class PyWaitGroup {
 public:
@@ -372,5 +390,6 @@ using py_fvio_callback_t    = std::function<void(PyWFFileVIOTask)>;
 using py_fsync_callback_t   = std::function<void(PyWFFileSyncTask)>;
 using py_timer_callback_t   = std::function<void(PyWFTimerTask)>;
 using py_counter_callback_t = std::function<void(PyWFCounterTask)>;
+using py_dynamic_create_t   = std::function<PySubTask(PyWFDynamicTask)>;
 
 #endif // PYWF_OTHER_TYPES_H

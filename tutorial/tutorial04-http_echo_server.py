@@ -27,7 +27,7 @@ def process(task):
     response.add_header_pair("Server", "Sogou Python3 WFHttpServer")
     seq = task.get_task_seq()
     if seq == 9:  # close after 10 requests, seq start from 0
-        resp.add_header_pair("Connection", "close")
+        response.add_header_pair("Connection", "close")
 
 
 def main():
@@ -54,7 +54,7 @@ def main():
         """
     else:
         print("Cannot start server")
-        sys.exit(code)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
