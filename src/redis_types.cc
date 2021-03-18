@@ -14,7 +14,7 @@ py::object redis_as_object(RedisValue &value) {
         for(size_t i = 0; i < value.arr_size(); i++) {
             lst.append(redis_as_object(value[i]));
         }
-        return lst;
+        return static_cast<py::object>(lst);
     }
     case REDIS_REPLY_TYPE_INTEGER:
         return py::int_(value.int_value());

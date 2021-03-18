@@ -4,6 +4,9 @@ set(CMAKE_BUILD_TYPE "RelWithDebInfo") # Attention Release will strip debug info
 set(CMAKE_VERBOSE_MAKEFILE ON)
 add_subdirectory(workflow)
 
+find_package(OpenSSL REQUIRED)
+include_directories(${OPENSSL_INCLUDE_DIR})
+
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 set(CMAKE_CXX_FLAGS, "-std=c++11 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG, "-O0 -g")

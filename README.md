@@ -153,3 +153,27 @@ pip3 install wheel
 python3 setup.py bdist_wheel
 pip3 install dist/*.whl --user
 ```
+
+```bash
+# Mac
+# Build Requirement
+brew install ninja cmake openssl
+pip3 install wheel
+
+# OpenSSL Env, see 'brew info openssl' for more infomation
+echo 'export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"' >> ~/.bash_profile
+echo 'export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"' >> ~/.bash_profile
+echo 'export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"' >> ~/.bash_profile
+echo 'export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"' >> ~/.bash_profile
+echo 'export OPENSSL_ROOT_DIR="/usr/local/opt/openssl@1.1/"' >> ~/.bash_profile
+
+# zsh Env, if needed
+echo 'test -f ~/.bash_profile  && source ~/.bash_profile' >> ~/.zshrc
+source ~/.zshrc
+
+# Build
+git clone https://github.com/sogou/pyworkflow --recursive
+cd pyworkflow
+python3 setup.py bdist_wheel
+pip3 install dist/*.whl --user
+```

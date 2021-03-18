@@ -133,7 +133,7 @@ public:
             const iovec &iov = arg->iov[i];
             contents.append(py::bytes((const char*)iov.iov_base, iov.iov_len));
         }
-        return contents;
+        return static_cast<py::object>(contents);
     }
 };
 
