@@ -35,7 +35,7 @@
 - get_fd() -> int
   - 获取和该任务相关的fd
 - get_offset() -> int
-- get_data() -> bytes
+- get_data() -> list[bytes]
   - 文件读取操作的结果
 
 #### FileSyncTask

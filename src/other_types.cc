@@ -72,8 +72,8 @@ PyWFFileVIOTask create_pwritev_task(int fd, const std::vector<py::bytes> &b, off
         bytes[i] = b[i];
     }
     if(failed) {
-        delete iov;
-        delete bytes;
+        delete[] iov;
+        delete[] bytes;
         return nullptr;
     }
     FileVIOTaskData *data = new FileVIOTaskData(iov, false, bytes, size);

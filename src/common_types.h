@@ -31,7 +31,11 @@ void py_callback_wrapper(Callable &&C, Args&& ...args) {
     }
     catch(py::error_already_set &e) {
         std::cerr << e.what() << std::endl;
+#ifdef __APPLE__
+        std::_Exit(1);
+#else
         std::quick_exit(1);
+#endif
     }
 }
 

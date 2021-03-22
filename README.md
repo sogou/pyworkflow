@@ -95,6 +95,12 @@ wf.wait_finish()
 
 有了上述三个概念，就可以构建出各种复杂的任务结构，并在Workflow的管理下高效执行。
 
+### 详细说明
+- [任务流](./doc/pywf.md)
+- [http任务](./doc/http.md)
+- [redis任务](./doc/redis.md)
+- [其他任务](./doc/others.md)
+
 ### 设计理念
 Workflow认为，一个典型的后端程序由三个部分组成，并且完全独立开发。即：程序=协议+算法+任务流。
 
@@ -150,6 +156,30 @@ yum install cmake ninja-build python36 python36-devel python3-pip
 git clone https://github.com/sogou/pyworkflow --recursive
 cd pyworkflow
 pip3 install wheel
+python3 setup.py bdist_wheel
+pip3 install dist/*.whl --user
+```
+
+```bash
+# Mac
+# Build Requirement
+brew install ninja cmake openssl
+pip3 install wheel
+
+# OpenSSL Env, see 'brew info openssl' for more infomation
+echo 'export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"' >> ~/.bash_profile
+echo 'export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"' >> ~/.bash_profile
+echo 'export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"' >> ~/.bash_profile
+echo 'export PKG_CONFIG_PATH="/usr/local/opt/openssl@1.1/lib/pkgconfig"' >> ~/.bash_profile
+echo 'export OPENSSL_ROOT_DIR="/usr/local/opt/openssl@1.1/"' >> ~/.bash_profile
+
+# zsh Env, if needed
+echo 'test -f ~/.bash_profile  && source ~/.bash_profile' >> ~/.zshrc
+source ~/.zshrc
+
+# Build
+git clone https://github.com/sogou/pyworkflow --recursive
+cd pyworkflow
 python3 setup.py bdist_wheel
 pip3 install dist/*.whl --user
 ```
