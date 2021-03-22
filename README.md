@@ -95,6 +95,12 @@ wf.wait_finish()
 
 有了上述三个概念，就可以构建出各种复杂的任务结构，并在Workflow的管理下高效执行。
 
+### 详细说明
+- [任务流](./doc/pywf.md)
+- [http任务](./doc/http.md)
+- [redis任务](./doc/redis.md)
+- [其他任务](./doc/others.md)
+
 ### 设计理念
 Workflow认为，一个典型的后端程序由三个部分组成，并且完全独立开发。即：程序=协议+算法+任务流。
 
