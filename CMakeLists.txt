@@ -8,6 +8,11 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
+
+if (APPLE)
+    add_compile_options(-fvisibility=default)
+endif ()
+
 set(CMAKE_CXX_FLAGS, "-std=c++11 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG, "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE, "-O2 -g")
