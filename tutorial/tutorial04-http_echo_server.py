@@ -6,31 +6,34 @@ import pywf as wf
 
 
 def process(task):
-    request = task.get_req()
-    response = task.get_resp()
+    req = task.get_req()
+    resp = task.get_resp()
 
-    response.append_body(b"<html>\n")  # as bytes
-    response.append_body(
-        f"<p>{request.get_method()} "
-        f"{request.get_request_uri()} "
-        f"{request.get_http_version()}</p>\n"
+    resp.append_body(b"<html>\n")  # as bytes
+    resp.append_body(
+        f"<p>{req.get_method()} "
+        f"{req.get_request_uri()} "
+        f"{req.get_http_version()}</p>\n"
     )
-    headers = request.get_headers()
+    headers = req.get_headers()
     for header in headers:
-        response.append_body(f"<p>{header[0]}: {header[1]}</p>\n")
-    response.append_body("</html>\n")  # as str
+        resp.append_body(f"<p>{header[0]}: {header[1]}</p>\n")
+    resp.append_body("</html>\n")  # as str
 
-    response.set_http_version("HTTP/1.1")
-    response.set_status_code("200")
-    response.set_reason_phrase("OK")
-    response.add_header_pair("Content-Type", "text/html")
-    response.add_header_pair("Server", "Sogou Python3 WFHttpServer")
+    resp.set_http_version("HTTP/1.1")
+    resp.set_status_code("200")
+    resp.set_reason_phrase("OK")
+    resp.add_header_pair("Content-Type", "text/html")
+    resp.add_header_pair("Server", "Sogou Python3 WFHttpServer")
     seq = task.get_task_seq()
-    if seq == 9:  # close after 10 requests, seq start from 0
-        response.add_header_pair("Connection", "close")
+    if seq == 9:  # close after 10 reqs, seq start from 0
+        resp.add_header_pair("Connection", "close")
 
 
 def main():
+    if len(sys.argv) != 2:
+        print("Usage {} <port>".format(sys.argv[0]))
+        sys.exit(1)
 
     port = int(sys.argv[1])
 
