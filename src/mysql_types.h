@@ -278,7 +278,7 @@ public:
             return py::none();
         }
     }
-    py::object fetch_all() {
+    py::list fetch_all() {
         py::list all;
         while(true) {
             py::object row;
