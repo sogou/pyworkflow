@@ -3,6 +3,12 @@
 
 #include "network_types.h"
 
+static inline std::string __as_string(const char *p) {
+    std::string s;
+    if(p) s.assign(p);
+    return s;
+}
+
 class HttpAttachment final : public protocol::ProtocolMessage::Attachment {
 public:
     HttpAttachment() : total_size(0) {}
@@ -130,7 +136,7 @@ public:
     }
 
     std::string get_http_version() const {
-        return this->get()->get_http_version();
+        return __as_string(this->get()->get_http_version());
     }
 
     std::vector<std::pair<std::string, std::string>> get_headers() const {
@@ -217,11 +223,11 @@ public:
     }
 
     std::string get_method() const {
-        return this->get()->get_method();
+        return __as_string(this->get()->get_method());
     }
 
     std::string get_request_uri() const {
-        return this->get()->get_request_uri();
+        return __as_string(this->get()->get_request_uri());
     }
 
     bool set_method(const std::string &s)       { return this->get()->set_method(s); }
@@ -248,11 +254,11 @@ public:
     }
 
     std::string get_status_code() const {
-        return this->get()->get_status_code();
+        return __as_string(this->get()->get_status_code());
     }
 
     std::string get_reason_phrase() const {
-        return this->get()->get_reason_phrase();
+        return __as_string(this->get()->get_reason_phrase());
     }
 
     bool set_status_code(const std::string &status_code) {
