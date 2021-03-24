@@ -99,6 +99,7 @@ wf.wait_finish()
 - [任务流](./doc/pywf.md)
 - [http任务](./doc/http.md)
 - [redis任务](./doc/redis.md)
+- [mysql任务](./doc/mysql.md)
 - [其他任务](./doc/others.md)
 
 ### 设计理念

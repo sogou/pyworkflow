@@ -103,7 +103,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="pywf",
-    version="0.0.4",
+    version="0.0.5",
     author="sogou",
     author_email="liukaidx@sogou-inc.com",
     description="A C++ Workflow Wrapper for Python",
