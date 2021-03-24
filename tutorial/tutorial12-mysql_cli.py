@@ -3,7 +3,6 @@ import sys
 
 import pywf as wf
 
-url = "mysql://pywftest:pywftest@checker.liukai.hb.ted/pywftest"
 default_column_width = 20
 retry_max = 2
 
