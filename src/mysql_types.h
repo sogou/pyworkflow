@@ -4,6 +4,7 @@
 #include "network_types.h"
 #include "workflow/MySQLMessage.h"
 #include "workflow/MySQLResult.h"
+#include "workflow/WFMySQLConnection.h"
 #include <datetime.h>
 
 class PyMySQLCell {
@@ -301,5 +302,29 @@ using PyWFMySQLTask       = PyWFNetworkTask<PyMySQLRequest, PyMySQLResponse>;
 using PyWFMySQLServer     = PyWFServer<PyMySQLRequest, PyMySQLResponse>;
 using py_mysql_callback_t = std::function<void(PyWFMySQLTask)>;
 using py_mysql_process_t  = std::function<void(PyWFMySQLTask)>;
+
+class PyWFMySQLConnection {
+public:
+    using OriginType = WFMySQLConnection;
+    PyWFMySQLConnection(int id) : conn(id) {}
+
+    int init(const std::string &url) { return conn.init(url); }
+    void deinit() { conn.deinit(); }
+
+    PyWFMySQLTask create_query_task(const std::string &query, py_mysql_callback_t cb) {
+        WFMySQLTask *ptr = conn.create_query_task(query, nullptr);
+        PyWFMySQLTask t(ptr);
+        t.set_callback(std::move(cb));
+        return t;
+    }
+    PyWFMySQLTask create_disconnect_task(py_mysql_callback_t cb) {
+        WFMySQLTask *ptr = conn.create_disconnect_task(nullptr);
+        PyWFMySQLTask t(ptr);
+        t.set_callback(std::move(cb));
+        return t;
+    }
+private:
+    OriginType conn;
+};
 
 #endif // PYWF_MYSQL_TYPES_H
