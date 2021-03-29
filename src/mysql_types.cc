@@ -173,6 +173,14 @@ void init_mysql_types(py::module_ &wf) {
         .def("get_user_data",       &PyWFMySQLTask::get_user_data)
     ;
 
+    py::class_<PyWFMySQLConnection>(wf, "MySQLConnection")
+        .def(py::init<int>())
+        .def("init",                   &PyWFMySQLConnection::init)
+        .def("deinit",                 &PyWFMySQLConnection::deinit)
+        .def("create_query_task",      &PyWFMySQLConnection::create_query_task)
+        .def("create_disconnect_task", &PyWFMySQLConnection::create_disconnect_task)
+    ;
+
     py::class_<PyWFMySQLServer>(wf, "MySQLServer")
         .def(py::init<py_mysql_process_t>())
         .def(py::init<WFServerParams, py_mysql_process_t>())

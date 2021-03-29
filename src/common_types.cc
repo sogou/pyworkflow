@@ -126,6 +126,7 @@ void init_common_types(py::module_ &wf) {
             << ", connect_timeout: " << self.connect_timeout
             << ", response_timeout: " << self.response_timeout
             << ", ssl_connect_timeout: " << self.ssl_connect_timeout
+            << ", use_tls_sni: " << std::boolalpha << self.use_tls_sni
             << "}";
             return oss.str();
         })
@@ -133,6 +134,7 @@ void init_common_types(py::module_ &wf) {
         .def_readwrite("connect_timeout",     &EndpointParams::connect_timeout)
         .def_readwrite("response_timeout",    &EndpointParams::response_timeout)
         .def_readwrite("ssl_connect_timeout", &EndpointParams::ssl_connect_timeout)
+        .def_readwrite("use_tls_sni",         &EndpointParams::use_tls_sni)
     ;
     py::class_<WFGlobalSettings>(wf, "GlobalSettings")
         .def(py::init([]() { return PYWF_GLOBAL_SETTINGS_DEFAULT; }))
@@ -144,8 +146,10 @@ void init_common_types(py::module_ &wf) {
             << ", connect_timeout: " << self.endpoint_params.connect_timeout
             << ", response_timeout: " << self.endpoint_params.response_timeout
             << ", ssl_connect_timeout: " << self.endpoint_params.ssl_connect_timeout
+            << ", use_tls_sni: " << std::boolalpha << self.endpoint_params.use_tls_sni
             << "}, dns_ttl_default: " << self.dns_ttl_default
             << ", dns_ttl_min: " << self.dns_ttl_min
+            << ", dns_threads: " << self.dns_threads
             << ", poller_threads: " << self.poller_threads
             << ", handler_threads: " << self.handler_threads
             << ", compute_threads: " << self.compute_threads
