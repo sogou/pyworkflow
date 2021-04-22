@@ -81,20 +81,10 @@ PyWFRedisTask create_redis_task(const std::string &url, int retry_max, py_redis_
 }
 
 void init_redis_types(py::module_ &wf) {
-    py::class_<RedisValue::StatusTag>(wf, "RedisValueStatusTag")
-        .def(py::init())
-    ;
-    py::class_<RedisValue::ErrorTag>(wf, "RedisValueErrorTag")
-        .def(py::init())
-    ;
 
     py::class_<RedisValue>(wf, "RedisValue")
         .def(py::init())
         .def(py::init<const RedisValue&>())
-        .def(py::init<int64_t>())
-        .def(py::init<std::string>())
-        .def(py::init<std::string, RedisValue::StatusTag>())
-        .def(py::init<std::string, RedisValue::ErrorTag>())
 
         .def("__len__",       &RedisValue::arr_size)
         .def("__getitem__",   &redis_arr_at_ref)

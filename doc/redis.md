@@ -8,10 +8,6 @@
 - 构造函数
   - RedisValue()
   - RedisValue(RedisValue)
-  - RedisValue(int)
-  - RedisValue(str)
-  - RedisValue(str, wf.RedisValueStatusTag)
-  - RedisValue(str, wf.RedisValueErrorTag)
 - copy() -> RedisValue
   - 获得当前对象的一份深拷贝
 - move_to(RedisValue) -> None
@@ -120,14 +116,8 @@ import pywf as wf
 
 def construct():
     v1 = wf.RedisValue()
-    v2 = wf.RedisValue(1024)
-    v3 = wf.RedisValue('python')
-    v4 = wf.RedisValue('error', wf.RedisValueErrorTag())
 
     print(v1.as_object()) # None
-    print(v2.as_object()) # 1024
-    print(v3.as_object()) # b'python'
-    print(v4.is_error(), v4.as_object()) # True b'error'
 
 def set_check():
     v1 = wf.RedisValue()
@@ -145,15 +135,16 @@ def array():
     v1[0].set_string('string')
     v11_ref = v1.arr_at_ref(1)
     v11_ref.set_array(2)
-    v11_ref[0] = wf.RedisValue(1)
-    v11_ref[1] = wf.RedisValue('value')
+    v11_ref[0].set_int(1)
+    v11_ref[1].set_string(b'value')
     v1[2] = v1[0] # v1[2] is a copy of v1[0]
     v1[0].set_nil()
 
     print(v1.as_object()) # [None, [1, b'value'], b'string']
 
     v2 = wf.RedisValue()
-    v3 = wf.RedisValue('string')
+    v3 = wf.RedisValue()
+    v3.set_string('string')
     v2.set_array(2)
     v3.move_to(v2[0])
     v21 = v2.arr_at(1) # arr_at returns a copy
