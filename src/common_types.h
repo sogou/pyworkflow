@@ -27,7 +27,7 @@ template<typename Callable, typename... Args>
 void py_callback_wrapper(Callable &&C, Args&& ...args) {
     py::gil_scoped_acquire acquire;
     try {
-        if(C) C(args...);
+        if(C) C(std::forward<Args>(args)...);
     }
     catch(py::error_already_set &e) {
         std::cerr << e.what() << std::endl;
