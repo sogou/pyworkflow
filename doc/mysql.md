@@ -41,7 +41,6 @@ mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
 3. 判断结果集状态（代表结果集读取状态）：用户可以使用MySQLResultCursor读取结果集中的内容，因为MySQL server返回的数据是多结果集的，因此一开始cursor会**自动指向第一个结果集**的读取位置。通过 **cursor.get_cursor_status()** 可以拿到的几种状态：
   - MYSQL_STATUS_GET_RESULT：有数据可读；
   - MYSQL_STATUS_END：当前结果集已读完最后一行；
-  - MYSQL_STATUS_EOF：所有结果集已取完；
   - MYSQL_STATUS_OK：此回复包为非结果集包，无需通过结果集接口读数据；
   - MYSQL_STATUS_ERROR：解析错误；
 
@@ -143,12 +142,17 @@ mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
   - 若当前ResultSet还有未返回的行，则返回下一行并移动下标，否则返回None
 - fetch_all() -> list[list[wf.MySQLCell]]
   - 返回当前ResultSet中所有剩余的行
+- get_cursor_status() -> int
+  - 返回cursor状态，即`wf.MYSQL_STATUS_*`
+- get_server_status() -> int
 - get_field_count() -> int
   - 返回当前ResultSet的field个数
-- get_rows_count()
+- get_rows_count() -> int
   - 返回当前ResultSet的行数
-- get_cursor_status()
-  - 返回cursor状态，即`wf.MYSQL_STATUS_*`
+- get_affected_rows() -> int
+- get_insert_id() -> int
+- get_warnings() -> int
+- get_info() -> bytes
 - rewind()
   - 将行标移动至当前ResultSet开始处
 
@@ -176,12 +180,14 @@ mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
 - get_affected_rows() -> int
 - get_last_insert_id() -> int
 - get_warnings() -> int
-- get_status_flags() -> int
 - get_error_code() -> int
 - get_error_msg() -> bytes
 - get_sql_state() -> bytes
 - get_info() -> bytes
 - set_ok_packet() -> None
+- get_seqid() -> int
+- set_seqid(int)
+- get_command() -> int
 - set_size_limit(int) -> None
 - get_size_limit() -> int
 
@@ -232,9 +238,8 @@ mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
 #### MySQL status
 - wf.MYSQL_STATUS_NOT_INIT
 - wf.MYSQL_STATUS_OK
-- wf.MYSQL_STATUS_EOF
-- wf.MYSQL_STATUS_ERROR
 - wf.MYSQL_STATUS_GET_RESULT
+- wf.MYSQL_STATUS_ERROR
 - wf.MYSQL_STATUS_END
 
 #### MySQL type
@@ -277,6 +282,7 @@ mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
 - wf.MYSQL_PACKET_NULL
 - wf.MYSQL_PACKET_EOF
 - wf.MYSQL_PACKET_ERROR
+- wf.MYSQL_PACKET_GET_RESULT
 - wf.MYSQL_PACKET_LOCAL_INLINE
 
 ### 示例
@@ -316,9 +322,9 @@ def mysql_callback(task):
     cursor = wf.MySQLResultCursor(resp)
 
     # 使用迭代语法遍历所有结果集
-    if cursor.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
+    for result_set in wf.MySQLResultSetIterator(cursor):
         # 1. 遍历每个结果集
-        for result_set in wf.MySQLResultSetIterator(cursor):
+        if result_set.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
             fields = result_set.fetch_fields()
 
             print(header_line(len(fields)))
@@ -333,6 +339,14 @@ def mysql_callback(task):
             print("{} {} in set\n".format(
                 result_set.get_rows_count(),
                 "row" if result_set.get_rows_count() == 1 else "rows"
+            ))
+        elif result_set.get_cursor_status() == wf.MYSQL_STATUS_OK:
+            print("OK. {} {} affected. {} warnings. insert_id={}. {}".format(
+                result_set.get_affected_rows(),
+                "row" if result_set.get_affected_rows() == 1 else "rows",
+                result_set.get_warnings(),
+                result_set.get_insert_id(),
+                str(result_set.get_info())
             ))
 
 # ...
@@ -361,9 +375,9 @@ def mysql_callback(task):
     cursor = wf.MySQLResultCursor(resp)
 
     # 遍历所有结果集
-    if cursor.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
+    while True:
         # 1. 遍历每个结果集
-        while True:
+        if cursor.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
             fields = cursor.fetch_fields()
 
             print(header_line(len(fields)))
@@ -388,8 +402,16 @@ def mysql_callback(task):
                 cursor.get_rows_count(),
                 "row" if cursor.get_rows_count() == 1 else "rows"
             ))
-            if cursor.next_result_set() == False:
-                break
+        elif cursor.get_cursor_status() == wf.MYSQL_STATUS_OK:
+            print("OK. {} {} affected. {} warnings. insert_id={}. {}".format(
+                cursor.get_affected_rows(),
+                "row" if cursor.get_affected_rows() == 1 else "rows",
+                cursor.get_warnings(),
+                cursor.get_insert_id(),
+                str(cursor.get_info())
+            ))
+        if cursor.next_result_set() == False:
+            break
 
 # ...
 ```
