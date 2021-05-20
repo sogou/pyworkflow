@@ -56,8 +56,8 @@ def mysql_callback(task):
     resp = task.get_resp()
     cursor = wf.MySQLResultCursor(resp)
 
-    if cursor.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
-        for result_set in wf.MySQLResultSetIterator(cursor):
+    for result_set in wf.MySQLResultSetIterator(cursor):
+        if result_set.get_cursor_status() == wf.MYSQL_STATUS_GET_RESULT:
             fields = result_set.fetch_fields()
 
             print(header_line(len(fields)))
@@ -72,8 +72,16 @@ def mysql_callback(task):
                 result_set.get_rows_count(),
                 "row" if result_set.get_rows_count() == 1 else "rows"
             ))
+        elif result_set.get_cursor_status() == wf.MYSQL_STATUS_OK:
+            print("OK. {} {} affected. {} warnings. insert_id={}. {}".format(
+                result_set.get_affected_rows(),
+                "row" if result_set.get_affected_rows() == 1 else "rows",
+                result_set.get_warnings(),
+                result_set.get_insert_id(),
+                as_str(result_set.get_info())
+            ))
 
-    elif resp.get_packet_type() == wf.MYSQL_PACKET_OK:
+    if resp.get_packet_type() == wf.MYSQL_PACKET_OK:
         print("OK. {} {} affected. {} warnings. insert_id={}. {}".format(
             resp.get_affected_rows(),
             "row" if resp.get_affected_rows() == 1 else "rows",
@@ -87,11 +95,6 @@ def mysql_callback(task):
             resp.get_error_code(),
             as_str(resp.get_error_msg())
         ))
-
-    elif resp.get_packet_type() == wf.MYSQL_PACKET_EOF:
-        print("EOF packet without any ResultSets")
-    else:
-        print("Abnormal packet_type={}".format(resp.get_packet_type()))
 
     url = wf.series_of(task).get_context()
     next_task = create_next_task(url, mysql_callback)

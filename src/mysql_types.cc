@@ -21,9 +21,8 @@ void init_mysql_types(py::module_ &wf) {
     // MySQL status constant
     wf.attr("MYSQL_STATUS_NOT_INIT")   = (int)MYSQL_STATUS_NOT_INIT;
     wf.attr("MYSQL_STATUS_OK")         = (int)MYSQL_STATUS_OK;
-    wf.attr("MYSQL_STATUS_EOF")        = (int)MYSQL_STATUS_EOF;
-    wf.attr("MYSQL_STATUS_ERROR")      = (int)MYSQL_STATUS_ERROR;
     wf.attr("MYSQL_STATUS_GET_RESULT") = (int)MYSQL_STATUS_GET_RESULT;
+    wf.attr("MYSQL_STATUS_ERROR")      = (int)MYSQL_STATUS_ERROR;
     wf.attr("MYSQL_STATUS_END")        = (int)MYSQL_STATUS_END;
 
     // MySQL type constant
@@ -66,6 +65,7 @@ void init_mysql_types(py::module_ &wf) {
     wf.attr("MYSQL_PACKET_NULL")         = (int)MYSQL_PACKET_NULL;
     wf.attr("MYSQL_PACKET_EOF")          = (int)MYSQL_PACKET_EOF;
     wf.attr("MYSQL_PACKET_ERROR")        = (int)MYSQL_PACKET_ERROR;
+    wf.attr("MYSQL_PACKET_GET_RESULT")   = (int)MYSQL_PACKET_GET_RESULT;
     wf.attr("MYSQL_PACKET_LOCAL_INLINE") = (int)MYSQL_PACKET_LOCAL_INLINE;
 
     py::class_<PyMySQLRequest, PyWFBase>(wf, "MySQLRequest")
@@ -90,12 +90,14 @@ void init_mysql_types(py::module_ &wf) {
         .def("get_affected_rows",  &PyMySQLResponse::get_affected_rows)
         .def("get_last_insert_id", &PyMySQLResponse::get_last_insert_id)
         .def("get_warnings",       &PyMySQLResponse::get_warnings)
-        .def("get_status_flags",   &PyMySQLResponse::get_status_flags)
         .def("get_error_code",     &PyMySQLResponse::get_error_code)
         .def("get_error_msg",      &PyMySQLResponse::get_error_msg)
         .def("get_sql_state",      &PyMySQLResponse::get_sql_state)
         .def("get_info",           &PyMySQLResponse::get_info)
         .def("set_ok_packet",      &PyMySQLResponse::set_ok_packet)
+        .def("get_seqid",          &PyMySQLResponse::get_seqid)
+        .def("set_seqid",          &PyMySQLResponse::set_seqid)
+        .def("get_command",        &PyMySQLResponse::get_command)
         .def("set_size_limit",     &PyMySQLResponse::set_size_limit)
         .def("get_size_limit",     &PyMySQLResponse::get_size_limit)
     ;
@@ -143,14 +145,19 @@ void init_mysql_types(py::module_ &wf) {
 
     py::class_<PyMySQLResultCursor>(wf, "MySQLResultCursor")
         .def(py::init<PyMySQLResponse&>())
-        .def("fetch_fields",      &PyMySQLResultCursor::fetch_fields)
         .def("next_result_set",   &PyMySQLResultCursor::next_result_set)
         .def("first_result_set",  &PyMySQLResultCursor::first_result_set)
+        .def("fetch_fields",      &PyMySQLResultCursor::fetch_fields)
         .def("fetch_row",         &PyMySQLResultCursor::fetch_row)
         .def("fetch_all",         &PyMySQLResultCursor::fetch_all)
+        .def("get_cursor_status", &PyMySQLResultCursor::get_cursor_status)
+        .def("get_server_status", &PyMySQLResultCursor::get_server_status)
         .def("get_field_count",   &PyMySQLResultCursor::get_field_count)
         .def("get_rows_count",    &PyMySQLResultCursor::get_rows_count)
-        .def("get_cursor_status", &PyMySQLResultCursor::get_cursor_status)
+        .def("get_affected_rows", &PyMySQLResultCursor::get_affected_rows)
+        .def("get_insert_id",     &PyMySQLResultCursor::get_insert_id)
+        .def("get_warnings",      &PyMySQLResultCursor::get_warnings)
+        .def("get_info",          &PyMySQLResultCursor::get_info)
         .def("rewind",            &PyMySQLResultCursor::rewind)
     ;
 
