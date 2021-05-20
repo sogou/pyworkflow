@@ -54,64 +54,6 @@ private:
     size_t total_size;
 };
 
-class CopyableHttpRequest {
-    using header_type = std::vector<std::pair<std::string, std::string>>;
-public:
-    CopyableHttpRequest() {}
-    CopyableHttpRequest(
-        bool chunked, bool keep_alive, std::string method, std::string request_uri,
-        std::string http_version, header_type headers, std::string body
-    ) :
-        chunked(chunked), keep_alive(keep_alive), method(std::move(method)),
-        request_uri(std::move(request_uri)), http_version(std::move(http_version)),
-        headers(std::move(headers)), body(std::move(body))
-    {}
-    bool is_chunked()              { return chunked; }
-    bool is_keep_alive()           { return keep_alive; }
-    std::string get_method()       { return method; }
-    std::string get_request_uri()  { return request_uri; }
-    std::string get_http_version() { return http_version; }
-    header_type get_headers()      { return headers; }
-    py::bytes get_parsed_body()    { return py::bytes(body.c_str(), body.size()); }
-private:
-    bool chunked{false};
-    bool keep_alive{false};
-    std::string method;
-    std::string request_uri;
-    std::string http_version;
-    header_type headers;
-    std::string body;
-};
-
-class CopyableHttpResponse {
-    using header_type = std::vector<std::pair<std::string, std::string>>;
-public:
-    CopyableHttpResponse() {}
-    CopyableHttpResponse(
-        bool chunked, bool keep_alive, std::string status_code, std::string reason_phrase,
-        std::string http_version, header_type headers, std::string body
-    ) :
-        chunked(chunked), keep_alive(keep_alive), status_code(std::move(status_code)),
-        reason_phrase(std::move(reason_phrase)), http_version(std::move(http_version)),
-        headers(std::move(headers)), body(std::move(body))
-    {}
-    bool is_chunked()               { return chunked; }
-    bool is_keep_alive()            { return keep_alive; }
-    std::string get_status_code()   { return status_code; }
-    std::string get_reason_phrase() { return reason_phrase; }
-    std::string get_http_version()  { return http_version; }
-    header_type get_headers()       { return headers; }
-    py::bytes get_parsed_body()     { return py::bytes(body.c_str(), body.size()); }
-private:
-    bool chunked{false};
-    bool keep_alive{false};
-    std::string status_code;
-    std::string reason_phrase;
-    std::string http_version;
-    header_type headers;
-    std::string body;
-};
-
 /**
  * This is a common supper class for PyHttpRequest and PyHttpResponse.
  * There is no need to export this class to python.
@@ -158,7 +100,7 @@ public:
     }
 
     bool set_http_version(const std::string &s) { return this->get()->set_http_version(s); }
-    bool append_body(py::bytes b) {
+    bool append_bytes_body(py::bytes b) {
         auto attach = static_cast<HttpAttachment*>(this->get()->get_attachment());
         if(attach == nullptr) { // Which means it is the first time to append body
             this->get()->clear_output_body();
@@ -179,8 +121,8 @@ public:
         return false;
     }
 
-    bool append_body(py::str s) {
-        return append_body((py::bytes)s);
+    bool append_str_body(py::str s) {
+        return append_bytes_body((py::bytes)s);
     }
 
     void clear_output_body() {
@@ -212,12 +154,6 @@ public:
     PyHttpRequest(const PyHttpRequest &o) : PyHttpMessage(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
 
-    CopyableHttpRequest copy() const {
-        return CopyableHttpRequest(
-            is_chunked(), is_keep_alive(), get_method(), get_request_uri(),
-            get_http_version(), get_headers(), _get_parsed_body());
-    }
-
     void move_to(PyHttpRequest &o) {
         *(o.get()) = std::move(*(this->get()));
     }
@@ -242,12 +178,6 @@ public:
     PyHttpResponse(OriginType *p)           : PyHttpMessage(p) {}
     PyHttpResponse(const PyHttpResponse &o) : PyHttpMessage(o) {}
     OriginType* get() const { return static_cast<OriginType*>(ptr); }
-
-    CopyableHttpResponse copy() const {
-        return CopyableHttpResponse(
-            is_chunked(), is_keep_alive(), get_status_code(), get_reason_phrase(),
-            get_http_version(), get_headers(), _get_parsed_body());
-    }
 
     void move_to(PyHttpResponse &o) {
         *(o.get()) = std::move(*(this->get()));
