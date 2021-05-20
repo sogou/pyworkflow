@@ -1,5 +1,6 @@
 from .cpp_pyworkflow import MySQLResultCursor
 from .cpp_pyworkflow import MYSQL_STATUS_GET_RESULT
+from .cpp_pyworkflow import MYSQL_STATUS_OK
 
 def MySQLRowIterator(cursor):
     assert type(cursor) == MySQLResultCursor
@@ -21,7 +22,8 @@ def MySQLRowObjectIterator(cursor):
 
 def MySQLResultSetIterator(cursor):
     assert type(cursor) == MySQLResultCursor
-    if cursor.get_cursor_status() != MYSQL_STATUS_GET_RESULT:
+    if cursor.get_cursor_status() != MYSQL_STATUS_GET_RESULT and \
+        cursor.get_cursor_status() != MYSQL_STATUS_OK:
         return
     cursor.first_result_set()
     yield cursor

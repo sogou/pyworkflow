@@ -237,12 +237,15 @@ public:
     }
 
     int get_warnings() const        { return this->get()->get_warnings(); }
-    int get_status_flags() const    { return this->get()->get_status_flags(); }
     int get_error_code() const      { return this->get()->get_error_code(); }
     py::bytes get_error_msg() const { return this->get()-> get_error_msg(); }
     py::bytes get_sql_state() const { return this->get()->get_sql_state(); }
     py::bytes get_info() const      { return this->get()->get_info(); }
     void set_ok_packet()            { return this->get()->set_ok_packet(); }
+
+    int get_seqid() const   { return this->get()->get_seqid(); }
+    void set_seqid(int id)  { this->get()->set_seqid(id); }
+    int get_command() const { return this->get()->get_command(); }
 
     void set_size_limit(size_t limit) { this->get()->set_size_limit(limit); }
     size_t get_size_limit() const     { return this->get()->get_size_limit(); }
@@ -290,10 +293,19 @@ public:
         return all;
     }
 
-    int get_field_count()   { return csr.get_field_count(); }
-    int get_rows_count()    { return csr.get_rows_count(); }
-    int get_cursor_status() { return csr.get_cursor_status(); }
-    void rewind()           { csr.rewind(); }
+    int get_cursor_status() const { return csr.get_cursor_status(); }
+    int get_server_status() const { return csr.get_server_status(); }
+
+    using ULL = unsigned long long;
+    int get_field_count()   const { return csr.get_field_count(); }
+    int get_rows_count()    const { return csr.get_rows_count(); }
+    ULL get_affected_rows() const { return csr.get_affected_rows(); }
+    ULL get_insert_id()     const { return csr.get_insert_id(); }
+    int get_warnings()      const { return csr.get_warnings(); }
+    py::bytes get_info()    const { return csr.get_info(); }
+
+    void rewind()                 { csr.rewind(); }
+
 private:
     OriginType csr;
 };

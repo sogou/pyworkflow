@@ -93,6 +93,7 @@
 
 ### 任务工厂等
 - wf.create_http_task(str url, int redirect_max, int retry_max, Callable[[wf.HttpTask], None]) -> wf.HttpTask
+- wf.create_http_task(str url, str proxy_url, int redirect_max, int retry_max, Callable[[wf.HttpTask], None]) -> wf.HttpTask
 - wf.ServerParams同workflow的WFServerParams
 
 Workflow中关于Server Params的定义，wf.ServerParams的默认构造会返回SERVER_PARAMS_DEFAULT

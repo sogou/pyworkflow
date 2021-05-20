@@ -19,8 +19,20 @@ void __network_helper::server_prepare(WFHttpTask *p) {
     pytask.set_callback(nullptr);
 }
 
-PyWFHttpTask create_http_task(const std::string &url, int redirect_max, int retry_max, py_http_callback_t cb) {
-    WFHttpTask *ptr = WFTaskFactory::create_http_task(url, redirect_max, retry_max, nullptr);
+PyWFHttpTask create_http_task(const std::string &url, int redirect_max,
+    int retry_max, py_http_callback_t cb) {
+    WFHttpTask *ptr = WFTaskFactory::create_http_task(url, redirect_max,
+        retry_max, nullptr);
+    PyWFHttpTask t(ptr);
+    t.set_callback(std::move(cb));
+    return t;
+}
+
+PyWFHttpTask create_http_proxy_task(const std::string &url,
+    const std::string proxy_url, int redirect_max, int retry_max,
+    py_http_callback_t cb) {
+    WFHttpTask *ptr = WFTaskFactory::create_http_task(url, proxy_url,
+        redirect_max, retry_max, nullptr);
     PyWFHttpTask t(ptr);
     t.set_callback(std::move(cb));
     return t;
@@ -44,29 +56,8 @@ void init_http_types(py::module_ &wf) {
         .def("set_user_data",       &PyWFHttpTask::set_user_data)
         .def("get_user_data",       &PyWFHttpTask::get_user_data)
     ;
-    py::class_<CopyableHttpRequest>(wf, "CopyableHttpRequest")
-        .def(py::init())
-        .def("is_chunked",       &CopyableHttpRequest::is_chunked)
-        .def("is_keep_alive",    &CopyableHttpRequest::is_keep_alive)
-        .def("get_method",       &CopyableHttpRequest::get_method)
-        .def("get_request_uri",  &CopyableHttpRequest::get_request_uri)
-        .def("get_http_version", &CopyableHttpRequest::get_http_version)
-        .def("get_headers",      &CopyableHttpRequest::get_headers)
-        .def("get_parsed_body",  &CopyableHttpRequest::get_parsed_body)
-    ;
-    py::class_<CopyableHttpResponse>(wf, "CopyableHttpResponse")
-        .def(py::init())
-        .def("is_chunked",        &CopyableHttpResponse::is_chunked)
-        .def("is_keep_alive",     &CopyableHttpResponse::is_keep_alive)
-        .def("get_status_code",   &CopyableHttpResponse::get_status_code)
-        .def("get_reason_phrase", &CopyableHttpResponse::get_reason_phrase)
-        .def("get_http_version",  &CopyableHttpResponse::get_http_version)
-        .def("get_headers",       &CopyableHttpResponse::get_headers)
-        .def("get_parsed_body",   &CopyableHttpResponse::get_parsed_body)
-    ;
     py::class_<PyHttpMessage, PyWFBase>(wf, "HttpMessage"); // Just export a class name
     py::class_<PyHttpRequest, PyHttpMessage>(wf, "HttpRequest")
-        //.def("copy",                 &PyHttpRequest::copy)
         .def("move_to",              &PyHttpRequest::move_to)
         .def("is_chunked",           &PyHttpRequest::is_chunked)
         .def("is_keep_alive",        &PyHttpRequest::is_keep_alive)
@@ -81,15 +72,14 @@ void init_http_types(py::module_ &wf) {
         .def("set_http_version",     &PyHttpRequest::set_http_version)
         .def("add_header_pair",      &PyHttpRequest::add_header_pair)
         .def("set_header_pair",      &PyHttpRequest::set_header_pair)
-        .def("append_body",          static_cast<bool(PyHttpRequest::*)(py::bytes)>(&PyHttpRequest::append_body))
-        .def("append_body",          static_cast<bool(PyHttpRequest::*)(py::str)>(&PyHttpRequest::append_body))
+        .def("append_body",          &PyHttpRequest::append_bytes_body)
+        .def("append_body",          &PyHttpRequest::append_str_body)
         .def("clear_body",           &PyHttpRequest::clear_output_body)
         .def("get_body_size",        &PyHttpRequest::get_output_body_size)
         .def("set_size_limit",       &PyHttpRequest::set_size_limit)
         .def("get_size_limit",       &PyHttpRequest::get_size_limit)
     ;
     py::class_<PyHttpResponse, PyHttpMessage>(wf, "HttpResponse")
-        //.def("copy",                 &PyHttpResponse::copy)
         .def("move_to",              &PyHttpResponse::move_to)
         .def("is_chunked",           &PyHttpResponse::is_chunked)
         .def("is_keep_alive",        &PyHttpResponse::is_keep_alive)
@@ -104,8 +94,8 @@ void init_http_types(py::module_ &wf) {
         .def("set_http_version",     &PyHttpResponse::set_http_version)
         .def("add_header_pair",      &PyHttpResponse::add_header_pair)
         .def("set_header_pair",      &PyHttpResponse::set_header_pair)
-        .def("append_body",          static_cast<bool(PyHttpResponse::*)(py::bytes)>(&PyHttpResponse::append_body))
-        .def("append_body",          static_cast<bool(PyHttpResponse::*)(py::str)>(&PyHttpResponse::append_body))
+        .def("append_body",          &PyHttpResponse::append_bytes_body)
+        .def("append_body",          &PyHttpResponse::append_str_body)
         .def("clear_body",           &PyHttpResponse::clear_output_body)
         .def("get_body_size",        &PyHttpResponse::get_output_body_size)
         .def("set_size_limit",       &PyHttpResponse::set_size_limit)
@@ -124,4 +114,6 @@ void init_http_types(py::module_ &wf) {
     ;
     wf.def("create_http_task", &create_http_task, py::arg("url"), py::arg("redirect_max"),
         py::arg("retry_max"), py::arg("callback"));
+    wf.def("create_http_task", &create_http_proxy_task, py::arg("url"), py::arg("proxy_url"),
+        py::arg("redirect_max"), py::arg("retry_max"), py::arg("callback"));
 }
