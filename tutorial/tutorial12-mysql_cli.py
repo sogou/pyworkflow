@@ -109,7 +109,7 @@ def main():
         sys.exit(1)
 
     url = sys.argv[1]
-    if url[:8].lower() != "mysql://":
+    if url[:8].lower() != "mysql://" and url[:9].lower() != "mysqls://":
         url = "mysql://" + url
 
     readline.set_auto_history(False)
