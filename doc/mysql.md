@@ -4,20 +4,30 @@
 
 - [tutorial12-mysql_cli.py](../tutorial/tutorial12-mysql_cli.py)
 
-### MySQL URL
+
+# MySQL URL的格式
+
 mysql://username:password@host:port/dbname?character_set=charset&character_set_results=charset
 
-- username和password按需填写
-- port默认为3306
-- dbname为要用的数据库名，一般如果SQL语句只操作一个db的话建议填写
-- character_set为client的字符集，等价于使用官方客户端启动时的参数`--default-character-set`的配置，默认utf8，具体可以参考MySQL官方文档[character-set.html](https://dev.mysql.com/doc/internals/en/character-set.html)
-- character_set_results为client、connection和results的字符集，如果想要在SQL语句里使用`SET NAME`来指定这些字符集的话，请把它配置到url的这个位置
+- 如果以SSL连接访问MySQL，则scheme设为**mysqls://**。MySQL server 5.7及以上支持；
 
-MySQL URL示例
+- username和password按需填写；
+
+- port默认为3306；
+
+- dbname为要用的数据库名，一般如果SQL语句只操作一个db的话建议填写；
+
+- character_set为client的字符集，等价于使用官方客户端启动时的参数``--default-character-set``的配置，默认utf8，具体可以参考MySQL官方文档[character-set.html](https://dev.mysql.com/doc/internals/en/character-set.html)。
+
+- character_set_results为client、connection和results的字符集，如果想要在SQL语句里使用``SET NAME``来指定这些字符集的话，请把它配置到url的这个位置。
+
+MySQL URL示例：
 
 mysql://root:password@127.0.0.1
 
 mysql://@test.mysql.com:3306/db1?character_set=utf8&character_set_results=utf8
+
+mysqls://localhost/db1?character\_set=big5
 
 ### MySQL结果集
 与workflow其他任务类似，可以用`task.get_resp()`拿到`MySQLResponse`，我们可以通过`MySQLResultCursor`遍历结果集及其中的每个列的信息`MySQLField`、每行和每个`MySQLCell`
