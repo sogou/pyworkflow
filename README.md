@@ -130,10 +130,9 @@ Python Workflow将会逐步支持Workflow的六种基础任务：通讯，文件
 ## 构建和安装
 
 ### 通过pip安装
-本项目仅支持Python3.6以上，正在准备发布一组`manylinux2014`版本，用户即将可以通过较高版本的pip直接安装。
+本项目支持Python 3.6以上，在pypi上发布了一组Python 3.6、3.7、3.8、3.9的`manylinux2014`版本，用户可以通过较高版本的pip直接安装。
 
 ```bash
-# We are working on it
 pip3 install pywf
 ```
 
