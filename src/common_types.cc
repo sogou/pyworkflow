@@ -13,6 +13,8 @@ static constexpr struct WFGlobalSettings PYWF_GLOBAL_SETTINGS_DEFAULT =
     .poller_threads  = 4,
     .handler_threads = 4,
     .compute_threads = 4,
+    .resolv_conf_path = "/etc/resolv.conf",
+    .hosts_path       = "/etc/hosts",
 };
 
 std::mutex CountableSeriesWork::series_mtx;
