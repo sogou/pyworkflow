@@ -6,15 +6,16 @@
 
 static constexpr struct WFGlobalSettings PYWF_GLOBAL_SETTINGS_DEFAULT =
 {
-    .endpoint_params = ENDPOINT_PARAMS_DEFAULT,
-    .dns_ttl_default = 12 * 3600,
-    .dns_ttl_min     = 180,
-    .dns_threads     = 4,
-    .poller_threads  = 4,
-    .handler_threads = 4,
-    .compute_threads = 4,
-    .resolv_conf_path = "/etc/resolv.conf",
-    .hosts_path       = "/etc/hosts",
+    .endpoint_params   = ENDPOINT_PARAMS_DEFAULT,
+    .dns_server_params = ENDPOINT_PARAMS_DEFAULT,
+    .dns_ttl_default   = 12 * 3600,
+    .dns_ttl_min       = 180,
+    .dns_threads       = 4,
+    .poller_threads    = 4,
+    .handler_threads   = 4,
+    .compute_threads   = 4,
+    .resolv_conf_path  = "/etc/resolv.conf",
+    .hosts_path        = "/etc/hosts",
 };
 
 std::mutex CountableSeriesWork::series_mtx;
@@ -158,13 +159,14 @@ void init_common_types(py::module_ &wf) {
             << "}";
             return oss.str();
         })
-        .def_readwrite("endpoint_params", &WFGlobalSettings::endpoint_params)
-        .def_readwrite("dns_ttl_default", &WFGlobalSettings::dns_ttl_default)
-        .def_readwrite("dns_ttl_min",     &WFGlobalSettings::dns_ttl_min)
-        .def_readwrite("dns_threads",     &WFGlobalSettings::dns_threads)
-        .def_readwrite("poller_threads",  &WFGlobalSettings::poller_threads)
-        .def_readwrite("handler_threads", &WFGlobalSettings::handler_threads)
-        .def_readwrite("compute_threads", &WFGlobalSettings::compute_threads)
+        .def_readwrite("endpoint_params",   &WFGlobalSettings::endpoint_params)
+        .def_readwrite("dns_server_params", &WFGlobalSettings::dns_server_params)
+        .def_readwrite("dns_ttl_default",   &WFGlobalSettings::dns_ttl_default)
+        .def_readwrite("dns_ttl_min",       &WFGlobalSettings::dns_ttl_min)
+        .def_readwrite("dns_threads",       &WFGlobalSettings::dns_threads)
+        .def_readwrite("poller_threads",    &WFGlobalSettings::poller_threads)
+        .def_readwrite("handler_threads",   &WFGlobalSettings::handler_threads)
+        .def_readwrite("compute_threads",   &WFGlobalSettings::compute_threads)
     ;
     py::class_<PyWFBase>(wf, "WFBase");
     py::class_<PySubTask, PyWFBase>(wf, "SubTask")
