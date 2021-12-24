@@ -138,6 +138,7 @@ void init_redis_types(py::module_ &wf) {
         .def("set_send_timeout",    &PyWFRedisTask::set_send_timeout)
         .def("set_receive_timeout", &PyWFRedisTask::set_receive_timeout)
         .def("set_keep_alive",      &PyWFRedisTask::set_keep_alive)
+        .def("get_peer_addr",       &PyWFRedisTask::get_peer_addr)
         .def("set_callback",        &PyWFRedisTask::set_callback)
         .def("set_user_data",       &PyWFRedisTask::set_user_data)
         .def("get_user_data",       &PyWFRedisTask::get_user_data)

@@ -175,6 +175,7 @@ void init_mysql_types(py::module_ &wf) {
         .def("set_send_timeout",    &PyWFMySQLTask::set_send_timeout)
         .def("set_receive_timeout", &PyWFMySQLTask::set_receive_timeout)
         .def("set_keep_alive",      &PyWFMySQLTask::set_keep_alive)
+        .def("get_peer_addr",       &PyWFMySQLTask::get_peer_addr)
         .def("set_callback",        &PyWFMySQLTask::set_callback)
         .def("set_user_data",       &PyWFMySQLTask::set_user_data)
         .def("get_user_data",       &PyWFMySQLTask::get_user_data)

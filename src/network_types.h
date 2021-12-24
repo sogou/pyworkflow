@@ -1,5 +1,7 @@
 #ifndef PYWF_NETWORK_TYPES_H
 #define PYWF_NETWORK_TYPES_H
+#include <arpa/inet.h>
+
 #include "common_types.h"
 #include "workflow/HttpMessage.h"
 #include "workflow/HttpUtil.h"
@@ -46,6 +48,27 @@ public:
     void set_send_timeout(int t)    { this->get()->set_send_timeout(t); }
     void set_receive_timeout(int t) { this->get()->set_receive_timeout(t); }
     void set_keep_alive(int t)      { this->get()->set_keep_alive(t); }
+
+    py::object get_peer_addr() const {
+        char ip_str[INET6_ADDRSTRLEN + 1] = { 0 };
+        struct sockaddr_storage addr;
+        socklen_t addrlen = sizeof (addr);
+        uint16_t port = 0;
+
+        if (this->get()->get_peer_addr((struct sockaddr *)&addr, &addrlen) == 0) {
+            if (addr.ss_family == AF_INET) {
+                struct sockaddr_in *sin = (struct sockaddr_in *)(&addr);
+                inet_ntop(AF_INET, &sin->sin_addr, ip_str, addrlen);
+                port = ntohs(sin->sin_port);
+            }
+            else if (addr.ss_family == AF_INET6) {
+                struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)(&addr);
+                inet_ntop(AF_INET6, &sin6->sin6_addr, ip_str, addrlen);
+                port = ntohs(sin6->sin6_port);
+            }
+        }
+        return py::make_tuple(py::str(ip_str), py::int_(port));
+    }
 
     void set_callback(_py_callback_t cb) {
         // The deleter will destruct both cb and user_data,

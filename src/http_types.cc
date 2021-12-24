@@ -52,6 +52,7 @@ void init_http_types(py::module_ &wf) {
         .def("set_send_timeout",    &PyWFHttpTask::set_send_timeout)
         .def("set_receive_timeout", &PyWFHttpTask::set_receive_timeout)
         .def("set_keep_alive",      &PyWFHttpTask::set_keep_alive)
+        .def("get_peer_addr",       &PyWFHttpTask::get_peer_addr)
         .def("set_callback",        &PyWFHttpTask::set_callback)
         .def("set_user_data",       &PyWFHttpTask::set_user_data)
         .def("get_user_data",       &PyWFHttpTask::get_user_data)
