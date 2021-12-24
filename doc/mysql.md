@@ -218,6 +218,8 @@ mysqls://localhost/db1?character\_set=big5
 - set_send_timeout(int) -> None
 - set_receive_timeout(int) -> None
 - set_keep_alive(int) -> None
+- get_peer_addr() -> tuple(str, int)
+  - 返回元组(ip, port)，若获取失败则ip为空字符串
 - set_callback(Callable[[wf.MySQLTask], None]) -> None
 - set_user_data(object) -> None
 - get_user_data() -> object
