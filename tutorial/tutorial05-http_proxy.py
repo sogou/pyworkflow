@@ -49,8 +49,6 @@ def http_callback(t):
     ctx = series.get_context()
     proxy_resp = ctx.proxy_task.get_resp()
 
-    if state == wf.WFT_STATE_SYS_ERROR and error == errno.ECONNRESET:
-        state = wf.WFT_STATE_SUCCESS
     if state == wf.WFT_STATE_SUCCESS:
         ctx.proxy_task.set_callback(reply_callback)
         # move content from resp to proxy_resp, then you cannot use resp
