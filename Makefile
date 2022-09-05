@@ -9,7 +9,7 @@ wheel:
 	python3 setup.py bdist_wheel
 
 install: wheel
-	pip3 install dist/pywf-0.0.8-*.whl --user
+	pip3 install dist/pywf-0.0.9-*.whl --user
 
 uninstall:
 	pip3 uninstall -y pywf

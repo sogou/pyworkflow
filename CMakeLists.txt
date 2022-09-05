@@ -26,7 +26,7 @@ pybind11_add_module(cpp_pyworkflow
     src/other_types.cc
     src/pyworkflow.cc)
 
-#find_package(workflow REQUIRED CONFIG HINTS workflow)
 include_directories(./workflow/_include)
-target_link_libraries(cpp_pyworkflow PRIVATE workflow pthread ssl crypto)
+target_link_libraries(cpp_pyworkflow PRIVATE
+    workflow-static pthread ssl crypto)
 target_compile_definitions(cpp_pyworkflow PRIVATE VERSION_INFO=${PYWORKFLOW_VERSION_INFO})
