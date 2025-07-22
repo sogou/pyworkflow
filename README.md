@@ -166,7 +166,7 @@ pip3 install dist/*.whl --user
 brew install ninja cmake openssl
 pip3 install wheel
 
-# OpenSSL Env, see 'brew info openssl' for more infomation
+# OpenSSL Env, see 'brew info openssl' for more information
 echo 'export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"' >> ~/.bash_profile
 echo 'export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"' >> ~/.bash_profile
 echo 'export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"' >> ~/.bash_profile
